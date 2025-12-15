@@ -164,7 +164,7 @@ def build_and_run(config: Dict[str, Any], out_dir: Path) -> None:
     # -----------------------
     # Simulation
     # -----------------------
-    sim_out = run_simulation(config, pop_specs=pop_specs, pop_geom=pop_geoms, edges=edges, out_dir=out_dir)
+    sim_out = run_simulation(config, pop_specs=cell_lib, pop_geom=pop_geoms, edges=edges, out_dir=out_dir)
     print("\nPhysiology summary (mean rates, Hz):")
     for pop_name, meta in sim_out.summary["populations"].items():
         print(

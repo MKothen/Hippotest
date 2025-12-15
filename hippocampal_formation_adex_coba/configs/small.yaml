@@ -281,11 +281,31 @@ simulation:
     E_gabab_mV: -90.0
 
   background:
-    n_sources: 50
-    rate_hz: 100.0
-    w_ampa_nS: 0.20
-    w_nmda_nS: 0.00
-    targets: ["EC_L2_Exc", "EC_L3_Exc"]
+    # Structured EC drive remains dominant; add low-level stochastic inputs per field
+    n_sources: 30
+    w_ampa_nS: 0.12
+    w_nmda_nS: 0.03
+    profiles:
+      EC_drive:
+        n_sources: 50
+        rate_hz: 100.0
+        w_ampa_nS: 0.20
+        w_nmda_nS: 0.00
+        targets: ["EC_L2_Exc", "EC_L3_Exc"]
+      DG_low_noise:
+        rate_hz: 8.0
+        w_ampa_nS: 0.06
+        w_nmda_nS: 0.01
+        targets: ["DG_GC", "DG_PV", "DG_SOM"]
+      CA3_CA2_excitable:
+        rate_hz: 22.0
+        targets: ["CA3_Pyr", "CA3_PV", "CA3_SOM", "CA2_Pyr", "CA2_PV", "CA2_SOM"]
+      CA1_moderate:
+        rate_hz: 14.0
+        targets: ["CA1_Pyr", "CA1_PV", "CA1_SOM"]
+      SUB_moderate:
+        rate_hz: 12.0
+        targets: ["SUB_Pyr", "SUB_PV", "SUB_SOM"]
 
   record:
     n_state_neurons_per_pop: 3

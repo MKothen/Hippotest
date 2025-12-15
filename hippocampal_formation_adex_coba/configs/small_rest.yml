@@ -1,0 +1,327 @@
+diff --git a/hippocampal_formation_adex_coba/configs/small_rest.yaml b/hippocampal_formation_adex_coba/configs/small_rest.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..b9cf41fd16628301bb564bc0dd1ccfac3239f6f3
+--- /dev/null
++++ b/hippocampal_formation_adex_coba/configs/small_rest.yaml
+@@ -0,0 +1,321 @@
++run_name: hippo3d_small_rest
++seed: 7
++
++hippocampome:
++  enabled: true
++  # If Hippocampome publishes a stable JSON endpoint you can set it here.
++  json_endpoint: null
++  cache_filename: hippocampome_priors.json
++
++anatomy:
++  atlas_name: allen_mouse_25um
++  regions:
++    DG:
++      structure_name: Dentate gyrus
++      layers:
++        OML: [0.00, 0.25]
++        MML: [0.25, 0.50]
++        IML: [0.50, 0.70]
++        GCL: [0.70, 0.82]
++        HIL: [0.82, 1.00]
++    CA3:
++      structure_name: Field CA3
++      layers:
++        SLM: [0.00, 0.25]
++        SR:  [0.25, 0.75]
++        SP:  [0.75, 0.85]
++        SO:  [0.85, 1.00]
++    CA2:
++      structure_name: Field CA2
++      layers:
++        SLM: [0.00, 0.25]
++        SR:  [0.25, 0.75]
++        SP:  [0.75, 0.85]
++        SO:  [0.85, 1.00]
++    CA1:
++      structure_name: Field CA1
++      layers:
++        SLM: [0.00, 0.25]
++        SR:  [0.25, 0.75]
++        SP:  [0.75, 0.85]
++        SO:  [0.85, 1.00]
++    SUB:
++      structure_name: Subiculum
++      layers:
++        MOLECULAR: [0.00, 0.30]
++        PYR:       [0.30, 0.75]
++        POLY:      [0.75, 1.00]
++    EC:
++      structure_name: Entorhinal area
++      layers:
++        L1: [0.00, 0.15]
++        L2: [0.15, 0.30]
++        L3: [0.30, 0.45]
++        L5: [0.45, 0.75]
++        L6: [0.75, 1.00]
++
++# Populations: explicit inhibitory types with targeting rules in pathways file
++populations:
++  EC_L2_Exc:
++    region: EC
++    soma_layer: L2
++    cell_type: EC_L2_Stellate
++    n: 800
++    viz_point_size: 3.0
++    placement:
++      mode: layer_weighted        # volume / layer_band / layer_weighted
++      layer_sigma_u: 0.25
++      restrict_to_layer_bounds: false
++      jitter_within_voxel: true
++
++  EC_L3_Exc:
++    region: EC
++    soma_layer: L3
++    cell_type: EC_L3_Pyramidal
++    n: 800
++    viz_point_size: 3.0
++    placement:
++      mode: layer_weighted
++      layer_sigma_u: 0.25
++      restrict_to_layer_bounds: false
++      jitter_within_voxel: true
++
++  EC_PV:
++    region: EC
++    soma_layer: L2
++    cell_type: PV_Basket
++    n: 120
++    viz_point_size: 4.0
++    placement:
++      mode: volume                # interneurons: fill region
++      jitter_within_voxel: true
++
++  EC_SOM:
++    region: EC
++    soma_layer: L3
++    cell_type: SOM_OLM
++    n: 120
++    viz_point_size: 4.0
++    placement:
++      mode: volume
++      jitter_within_voxel: true
++
++  DG_GC:
++    region: DG
++    soma_layer: GCL
++    cell_type: DG_Granule
++    n: 3000
++    viz_point_size: 2.5
++    placement:
++      mode: layer_weighted        # keep GCL bias but 3D fill
++      layer_sigma_u: 0.12
++      restrict_to_layer_bounds: false
++      jitter_within_voxel: true
++
++  DG_PV:
++    region: DG
++    soma_layer: GCL
++    cell_type: PV_Basket
++    n: 250
++    viz_point_size: 4.0
++    placement:
++      mode: volume
++      jitter_within_voxel: true
++
++  DG_SOM:
++    region: DG
++    soma_layer: HIL
++    cell_type: SOM_HIPP
++    n: 160
++    viz_point_size: 4.0
++    placement:
++      mode: volume
++      jitter_within_voxel: true
++
++  CA3_Pyr:
++    region: CA3
++    soma_layer: SP
++    cell_type: CA3_Pyramidal
++    n: 2000
++    viz_point_size: 2.5
++    placement:
++      mode: layer_weighted
++      layer_sigma_u: 0.15
++      restrict_to_layer_bounds: false
++      jitter_within_voxel: true
++
++  CA3_PV:
++    region: CA3
++    soma_layer: SP
++    cell_type: PV_Basket
++    n: 200
++    viz_point_size: 4.0
++    placement:
++      mode: volume
++      jitter_within_voxel: true
++
++  CA3_SOM:
++    region: CA3
++    soma_layer: SO
++    cell_type: SOM_OLM
++    n: 160
++    viz_point_size: 4.0
++    placement:
++      mode: volume
++      jitter_within_voxel: true
++
++  CA2_Pyr:
++    region: CA2
++    soma_layer: SP
++    cell_type: CA2_Pyramidal
++    n: 500
++    viz_point_size: 2.5
++    placement:
++      mode: layer_weighted
++      layer_sigma_u: 0.18
++      restrict_to_layer_bounds: false
++      jitter_within_voxel: true
++
++  CA2_PV:
++    region: CA2
++    soma_layer: SP
++    cell_type: PV_Basket
++    n: 60
++    viz_point_size: 4.0
++    placement:
++      mode: volume
++      jitter_within_voxel: true
++
++  CA2_SOM:
++    region: CA2
++    soma_layer: SO
++    cell_type: SOM_OLM
++    n: 40
++    viz_point_size: 4.0
++    placement:
++      mode: volume
++      jitter_within_voxel: true
++
++  CA1_Pyr:
++    region: CA1
++    soma_layer: SP
++    cell_type: CA1_Pyramidal
++    n: 2500
++    viz_point_size: 2.5
++    placement:
++      mode: layer_weighted
++      layer_sigma_u: 0.15
++      restrict_to_layer_bounds: false
++      jitter_within_voxel: true
++
++  CA1_PV:
++    region: CA1
++    soma_layer: SP
++    cell_type: PV_Basket
++    n: 250
++    viz_point_size: 4.0
++    placement:
++      mode: volume
++      jitter_within_voxel: true
++
++  CA1_SOM:
++    region: CA1
++    soma_layer: SO
++    cell_type: SOM_OLM
++    n: 200
++    viz_point_size: 4.0
++    placement:
++      mode: volume
++      jitter_within_voxel: true
++
++  SUB_Pyr:
++    region: SUB
++    soma_layer: PYR
++    cell_type: SUB_Pyramidal
++    n: 1200
++    viz_point_size: 2.5
++    placement:
++      mode: layer_weighted
++      layer_sigma_u: 0.20
++      restrict_to_layer_bounds: false
++      jitter_within_voxel: true
++
++  SUB_PV:
++    region: SUB
++    soma_layer: PYR
++    cell_type: PV_Basket
++    n: 100
++    viz_point_size: 4.0
++    placement:
++      mode: volume
++      jitter_within_voxel: true
++
++  SUB_SOM:
++    region: SUB
++    soma_layer: POLY
++    cell_type: SOM_OLM
++    n: 80
++    viz_point_size: 4.0
++    placement:
++      mode: volume
++      jitter_within_voxel: true
++
++connectivity:
++  pathways_file: configs/pathways_default.yaml
++  # Scale <1.0 makes the laptop-size model sparser while keeping pathway structure
++  scale: 1.0
++
++simulation:
++  dt_ms: 0.1
++  t_sim_s: 10.0
++  codegen_target: cython
++
++  synapse_kinetics:
++    tau_ampa_ms: 5.0
++    tau_nmda_ms: 100.0
++    tau_gabaa_ms: 10.0
++    tau_gabab_ms: 200.0
++    E_ampa_mV: 0.0
++    E_nmda_mV: 0.0
++    E_gabaa_mV: -75.0
++    E_gabab_mV: -90.0
++
++  background:
++    # Lower EC drive and slightly higher CA3/CA2 bias to emulate rest/SWR-capable state
++    n_sources: 30
++    w_ampa_nS: 0.12
++    w_nmda_nS: 0.04
++    profiles:
++      EC_drive:
++        n_sources: 40
++        rate_hz: 30.0
++        w_ampa_nS: 0.18
++        w_nmda_nS: 0.02
++        targets: ["EC_L2_Exc", "EC_L3_Exc"]
++      DG_low_noise:
++        rate_hz: 6.0
++        w_ampa_nS: 0.05
++        w_nmda_nS: 0.01
++        targets: ["DG_GC", "DG_PV", "DG_SOM"]
++      CA3_CA2_excitable:
++        rate_hz: 28.0
++        w_nmda_nS: 0.06
++        targets: ["CA3_Pyr", "CA3_PV", "CA3_SOM", "CA2_Pyr", "CA2_PV", "CA2_SOM"]
++      CA1_moderate:
++        rate_hz: 10.0
++        w_ampa_nS: 0.10
++        w_nmda_nS: 0.03
++        targets: ["CA1_Pyr", "CA1_PV", "CA1_SOM"]
++      SUB_moderate:
++        rate_hz: 10.0
++        w_ampa_nS: 0.10
++        w_nmda_nS: 0.03
++        targets: ["SUB_Pyr", "SUB_PV", "SUB_SOM"]
++
++  record:
++    n_state_neurons_per_pop: 3
++
++  viz:
++    max_raster_neurons_per_pop: 250
++    rate_bin_ms: 5.0
++    rate_smooth_ms: 20.0

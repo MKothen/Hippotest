@@ -102,15 +102,44 @@ def run_simulation(
         pop_sizes[pop_name] = int(geom.xyz_mm.shape[0])
 
     # ---- background excitation (PoissonInput goes to conductances directly)
-    bg = sim_cfg.get("background", {}) or {}
-    bg_rate_hz = float(bg.get("rate_hz", 0.0))
-    bg_n = int(bg.get("n_sources", 0))
-    bg_w_ampa_nS = float(bg.get("w_ampa_nS", 0.0))
-    bg_w_nmda_nS = float(bg.get("w_nmda_nS", 0.0))
-    bg_targets = list(bg.get("targets", list(groups.keys())))
+    bg_cfg = sim_cfg.get("background", {}) or {}
+
+    def iter_background_entries(cfg: Any) -> List[Dict[str, Any]]:
+        if isinstance(cfg, list):
+            return [entry for entry in cfg if isinstance(entry, dict)]
+
+        if isinstance(cfg, dict):
+            profiles = cfg.get("profiles")
+            base = {k: v for k, v in cfg.items() if k != "profiles"}
+
+            if profiles is None:
+                return [base]
+
+            if isinstance(profiles, dict):
+                profile_entries = profiles.values()
+            else:
+                profile_entries = profiles
+
+            entries: List[Dict[str, Any]] = []
+            for entry in profile_entries:
+                if isinstance(entry, dict):
+                    merged = {**base, **entry}
+                    entries.append(merged)
+            return entries
+
+        return []
 
     poisson_inputs = []
-    if bg_n > 0 and bg_rate_hz > 0:
+    for bg in iter_background_entries(bg_cfg):
+        bg_rate_hz = float(bg.get("rate_hz", 0.0))
+        bg_n = int(bg.get("n_sources", 0))
+        bg_w_ampa_nS = float(bg.get("w_ampa_nS", 0.0))
+        bg_w_nmda_nS = float(bg.get("w_nmda_nS", 0.0))
+        bg_targets = list(bg.get("targets", list(groups.keys())))
+
+        if bg_n <= 0 or bg_rate_hz <= 0:
+            continue
+
         for pop_name in bg_targets:
             if pop_name not in groups:
                 continue
