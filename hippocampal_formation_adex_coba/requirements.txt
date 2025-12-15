@@ -1,0 +1,12 @@
+brian2>=2.7
+numpy>=1.24
+scipy>=1.10
+matplotlib>=3.7
+pyyaml>=6.0
+platformdirs>=4.0
+tqdm>=4.66
+pyvista>=0.43
+trimesh>=4.0
+brainglobe-atlasapi>=2.0
+pytest>=7.4
+requests

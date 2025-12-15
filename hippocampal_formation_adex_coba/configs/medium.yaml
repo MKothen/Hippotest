@@ -1,0 +1,71 @@
+
+run_name: hippo3d_medium
+seed: 7
+
+hippocampome:
+  enabled: true
+  json_endpoint: null
+  cache_filename: hippocampome_priors.json
+
+anatomy:
+  atlas_name: allen_mouse_25um
+  regions:
+    DG:
+      structure_name: Dentate gyrus
+      layers: {OML: [0.00, 0.25], MML: [0.25, 0.50], IML: [0.50, 0.70], GCL: [0.70, 0.82], HIL: [0.82, 1.00]}
+    CA3:
+      structure_name: Field CA3
+      layers: {SLM: [0.00, 0.25], SR: [0.25, 0.75], SP: [0.75, 0.85], SO: [0.85, 1.00]}
+    CA2:
+      structure_name: Field CA2
+      layers: {SLM: [0.00, 0.25], SR: [0.25, 0.75], SP: [0.75, 0.85], SO: [0.85, 1.00]}
+    CA1:
+      structure_name: Field CA1
+      layers: {SLM: [0.00, 0.25], SR: [0.25, 0.75], SP: [0.75, 0.85], SO: [0.85, 1.00]}
+    SUB:
+      structure_name: Subiculum
+      layers: {MOLECULAR: [0.00, 0.30], PYR: [0.30, 0.75], POLY: [0.75, 1.00]}
+    EC:
+      structure_name: Entorhinal area
+      layers: {L1: [0.00, 0.15], L2: [0.15, 0.30], L3: [0.30, 0.45], L5: [0.45, 0.75], L6: [0.75, 1.00]}
+
+populations:
+  EC_L2_Exc: {region: EC, soma_layer: L2, cell_type: EC_L2_Stellate, n: 2400}
+  EC_L3_Exc: {region: EC, soma_layer: L3, cell_type: EC_L3_Pyramidal, n: 2400}
+  EC_PV:     {region: EC, soma_layer: L2, cell_type: PV_Basket, n: 360}
+  EC_SOM:    {region: EC, soma_layer: L3, cell_type: SOM_OLM, n: 360}
+
+  DG_GC:     {region: DG, soma_layer: GCL, cell_type: DG_Granule, n: 9000}
+  DG_PV:     {region: DG, soma_layer: GCL, cell_type: PV_Basket, n: 750}
+  DG_SOM:    {region: DG, soma_layer: HIL, cell_type: SOM_HIPP, n: 480}
+
+  CA3_Pyr:   {region: CA3, soma_layer: SP, cell_type: CA3_Pyramidal, n: 6000}
+  CA3_PV:    {region: CA3, soma_layer: SP, cell_type: PV_Basket, n: 600}
+  CA3_SOM:   {region: CA3, soma_layer: SO, cell_type: SOM_OLM, n: 480}
+
+  CA2_Pyr:   {region: CA2, soma_layer: SP, cell_type: CA2_Pyramidal, n: 1500}
+  CA2_PV:    {region: CA2, soma_layer: SP, cell_type: PV_Basket, n: 180}
+  CA2_SOM:   {region: CA2, soma_layer: SO, cell_type: SOM_OLM, n: 120}
+
+  CA1_Pyr:   {region: CA1, soma_layer: SP, cell_type: CA1_Pyramidal, n: 7500}
+  CA1_PV:    {region: CA1, soma_layer: SP, cell_type: PV_Basket, n: 750}
+  CA1_SOM:   {region: CA1, soma_layer: SO, cell_type: SOM_OLM, n: 600}
+
+  SUB_Pyr:   {region: SUB, soma_layer: PYR, cell_type: SUB_Pyramidal, n: 3600}
+  SUB_PV:    {region: SUB, soma_layer: PYR, cell_type: PV_Basket, n: 300}
+  SUB_SOM:   {region: SUB, soma_layer: POLY, cell_type: SOM_OLM, n: 240}
+
+connectivity:
+  pathways_file: configs/pathways_default.yaml
+  scale: 0.25
+
+simulation:
+  dt_ms: 0.1
+  t_sim_s: 1.0
+  codegen_target: cython
+  background:
+    n_sources: 80
+    rate_hz: 250.0
+    w_ampa_nS: 0.18
+  record:
+    n_state_neurons_per_pop: 2
