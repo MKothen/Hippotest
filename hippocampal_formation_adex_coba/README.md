@@ -49,6 +49,8 @@ Outputs are written to `runs/<run_name>_<timestamp>/`:
 - `configs/medium.yaml`: ~3× neurons, denser (`scale=0.25`)
 - `configs/large.yaml`: workstation-scale; uses `cpp_standalone` (Brian2) and much larger neuron counts
 
+Anatomy configs accept `hemisphere` (`left`, `right`, or `both`, default `both`). Provided configs default to `left` to build a single-hemisphere network.
+
 Connectivity is defined in `configs/pathways_default.yaml` and is intentionally **separated from code**.
 
 ---

@@ -15,6 +15,7 @@ index 0000000000000000000000000000000000000000..b9cf41fd16628301bb564bc0dd1ccfac
 +
 +anatomy:
 +  atlas_name: allen_mouse_25um
++  hemisphere: left
 +  regions:
 +    DG:
 +      structure_name: Dentate gyrus

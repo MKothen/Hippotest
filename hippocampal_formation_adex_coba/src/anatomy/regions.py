@@ -292,7 +292,9 @@ def _compute_laminar_per_hemi(
     return axes_all, lam, lon
 
 
-def load_region_geometry(atlas: Any, structure_name: str) -> RegionGeometry:
+def load_region_geometry(
+    atlas: Any, structure_name: str, *, hemisphere: str = "both"
+) -> RegionGeometry:
     root_ids = resolve_structure_ids(atlas, structure_name)
 
     all_ids: List[int] = []
@@ -301,11 +303,29 @@ def load_region_geometry(atlas: Any, structure_name: str) -> RegionGeometry:
         all_ids.extend(descendant_ids(atlas, int(rid)))
     all_ids = sorted(set(all_ids))
 
+    hemi = hemisphere.lower()
+    if hemi not in {"both", "left", "right"}:
+        raise ValueError("hemisphere must be one of: 'both', 'left', 'right'")
+
     mask_zyx = mask_for_structure_ids(atlas.annotation, all_ids)
     if not mask_zyx.any():
         raise ValueError(
             f"Empty/unresolved region mask for '{structure_name}' (root_ids={root_ids})."
         )
+
+    # Restrict to a single hemisphere while keeping atlas-aligned dimensions.
+    if hemi != "both":
+        x_mid = 0.5 * float(mask_zyx.shape[2])
+        x_axis = np.arange(mask_zyx.shape[2], dtype=float)
+        if hemi == "left":
+            hemi_mask = x_axis < x_mid
+        else:  # "right"
+            hemi_mask = x_axis >= x_mid
+        mask_zyx = mask_zyx & hemi_mask[None, None, :]
+        if not mask_zyx.any():
+            raise ValueError(
+                f"Hemisphere '{hemisphere}' empty for '{structure_name}' (root_ids={root_ids})."
+            )
 
     vox_zyx = np.argwhere(mask_zyx)  # (z,y,x)
     res_um = atlas_resolution_um(atlas)  # (x,y,z) µm/voxel
