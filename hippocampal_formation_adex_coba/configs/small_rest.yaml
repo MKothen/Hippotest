@@ -9,6 +9,7 @@ hippocampome:
 
 anatomy:
   atlas_name: allen_mouse_25um
+  hemisphere: left
   regions:
     DG:
       structure_name: Dentate gyrus

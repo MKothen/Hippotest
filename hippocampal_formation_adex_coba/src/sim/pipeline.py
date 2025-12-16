@@ -30,13 +30,14 @@ def build_and_run(config: Dict[str, Any], out_dir: Path) -> None:
     # -----------------------
     anat = config["anatomy"]
     atlas = CCFAtlas(atlas_name=str(anat.get("atlas_name", "allen_mouse_25um")))
+    hemisphere = str(anat.get("hemisphere", "both"))
 
     region_cfg: Dict[str, Any] = anat["regions"]
     region_geoms: Dict[str, RegionGeometry] = {}
 
     for region_key, rcfg in region_cfg.items():
         sname = str(rcfg["structure_name"])
-        geom = load_region_geometry(atlas, sname)
+        geom = load_region_geometry(atlas, sname, hemisphere=hemisphere)
         region_geoms[region_key] = geom
 
     # -----------------------
