@@ -269,7 +269,10 @@ connectivity:
 simulation:
   dt_ms: 0.1
   t_sim_s: 1.0
-  background: {rate_hz: 0.0, n_sources: 0}
+  background:
+    rate_hz: 1.0
+    n_sources: 50
+    weight_nS: 0.15
   codegen_target: cython
 
   synapse_kinetics:
@@ -296,16 +299,18 @@ simulation:
     max_raster_neurons_per_pop: 250
     rate_bin_ms: 5.0
     rate_smooth_ms: 20.0
-ec_input:
-  mode: hc3_replay
-  hc3:
-    session_tar_gz: C:\Users\maxim\Downloads\ec013.805.tar.gz
-    metadata_xlsx: C:\Users\maxim\Downloads\crcns-hc3-metadata-tables.zip
-    cache_dir: runs/hc3_cache
-    regions: ["EC2", "EC3"]
-    cell_types: ["p"]
-    t_start_s: 0.0
-    t_stop_s: 1200.0
-    time_unit: samples
-    l2_regions: ["EC2"]
-    l3_regions: ["EC3"]
+  ec_input:
+    mode: hc3_replay
+    hc3:
+      session_tar_gz: C:\Users\maxim\Downloads\ec013.805.tar.gz
+      metadata_xlsx: C:\Users\maxim\Downloads\crcns-hc3-metadata-tables.zip
+      cache_dir: runs/hc3_cache
+      regions: ["EC2", "EC3"]
+      cell_types: ["p"]
+      t_start_s: 0.0
+      t_stop_s: 1200.0
+      time_unit: samples
+      l2_regions: ["EC2"]
+      l3_regions: ["EC3"]
+      replay_connection_probability: 0.2
+      replay_weight_nS: 0.8

@@ -11,6 +11,7 @@ from brian2 import (
     SpikeGeneratorGroup,
     SpikeMonitor,
     StateMonitor,
+    Synapses,
     Hz,
     ms,
     mV,
@@ -23,7 +24,7 @@ from ..celltypes.library import CellTypeSpec
 from ..connectivity.builder import PopulationGeometry, PathwayEdges
 from .model import make_population, make_synapses, SynapseKinetics, DEFAULT_KINETICS
 from .io import save_json, save_npz
-from ..data.hc3.cache import load_or_build_cache, HC3CacheData
+from ..data.hc3.cache import load_or_build_hc3_cache, HC3CacheData
 
 # NEW: your single, information-dense activity plot
 from .plots import save_activity_figure
@@ -35,68 +36,11 @@ class SimOutputs:
     summary: Dict[str, Any]
 
 
-def _prepare_ec_replay(config: Dict[str, Any], pop_geom: Dict[str, PopulationGeometry]) -> Dict[str, Dict[str, Any]]:
-    ec_cfg = config.get("ec_input", {}) or {}
-    if str(ec_cfg.get("mode", "poisson")) != "hc3_replay":
-        return {}
-
-    hc3_cfg = ec_cfg.get("hc3", {}) or {}
-    session_tar = hc3_cfg.get("session_tar_gz")
-    metadata_xlsx = hc3_cfg.get("metadata_xlsx")
-    if session_tar is None or metadata_xlsx is None:
-        raise ValueError("hc3_replay mode requires session_tar_gz and metadata_xlsx")
-
-    cache: HC3CacheData = load_or_build_cache(
-        session_tar_gz=session_tar,
-        metadata_xlsx=metadata_xlsx,
-        regions=hc3_cfg.get("regions"),
-        cell_types=hc3_cfg.get("cell_types"),
-        t_start_s=float(hc3_cfg.get("t_start_s", 0.0)),
-        t_stop_s=hc3_cfg.get("t_stop_s", None),
-        time_unit=str(hc3_cfg.get("time_unit", "samples")),
-        sample_rate_hz=hc3_cfg.get("sample_rate_hz", None),
-        cache_dir=hc3_cfg.get("cache_dir", "runs/hc3_cache"),
-    )
-
-    replay_streams: Dict[str, Dict[str, Any]] = {}
-
-    def assign_stream(pop_name: str, regions: Any) -> None:
-        if pop_name not in pop_geom:
-            return
-        if regions is None:
-            return
-        region_mask = np.isin(cache.unit_region, list(regions))
-        if not region_mask.any():
-            return
-        unit_ids = np.nonzero(region_mask)[0]
-        pop_size = pop_geom[pop_name].xyz_mm.shape[0]
-        if pop_size <= 0:
-            return
-        selected_units = unit_ids[:pop_size]
-        mapping = np.full(cache.unit_region.shape[0], -1, dtype=int)
-        mapping[selected_units] = np.arange(selected_units.size, dtype=int)
-
-        spike_mask = mapping[cache.indices] >= 0
-        if not spike_mask.any():
-            return
-        times = cache.times_s[spike_mask]
-        indices = mapping[cache.indices[spike_mask]]
-        order = np.argsort(times, kind="stable")
-        replay_streams[pop_name] = {
-            "times": times[order],
-            "indices": indices[order],
-            "n_units": int(selected_units.size),
-        }
-
-    l2_regions = hc3_cfg.get("l2_regions", hc3_cfg.get("regions"))
-    l3_regions = hc3_cfg.get("l3_regions", None)
-    assign_stream("EC_L2_Exc", l2_regions)
-    assign_stream("EC_L3_Exc", l3_regions)
-
-    if not replay_streams:
-        raise RuntimeError("hc3_replay mode enabled but no spikes matched the configured regions")
-
-    return replay_streams
+def _get_ec_input_cfg(config: Dict[str, Any]) -> Dict[str, Any]:
+    sim_ec = (config.get("simulation") or {}).get("ec_input")
+    if sim_ec is not None:
+        return sim_ec or {}
+    return config.get("ec_input", {}) or {}
 
 
 def _as_float_array(x) -> np.ndarray:
@@ -158,7 +102,43 @@ def run_simulation(
         return next(iter(pop_specs.keys()))
 
     # ---- replay inputs (if configured)
-    replay_streams = _prepare_ec_replay(config, pop_geom)
+    ec_input_cfg = _get_ec_input_cfg(config)
+    replay_cache: HC3CacheData | None = None
+    l2_unit_indices: List[int] = []
+    l3_unit_indices: List[int] = []
+    replay_conn_prob = 0.0
+    replay_weight_nS = 0.0
+
+    if str(ec_input_cfg.get("mode", "poisson")) == "hc3_replay":
+        hc3_cfg = ec_input_cfg.get("hc3", {}) or {}
+        session_tar = hc3_cfg.get("session_tar_gz")
+        metadata_xlsx = hc3_cfg.get("metadata_xlsx")
+        if session_tar is None or metadata_xlsx is None:
+            raise ValueError("hc3_replay mode requires session_tar_gz and metadata_xlsx")
+
+        replay_cache = load_or_build_hc3_cache(
+            session_tar_gz=session_tar,
+            metadata_xlsx=metadata_xlsx,
+            cache_dir=hc3_cfg.get("cache_dir", "runs/hc3_cache"),
+            regions=hc3_cfg.get("regions", ["EC2", "EC3"]),
+            cell_types=hc3_cfg.get("cell_types", ["p"]),
+            t_start_s=hc3_cfg.get("t_start_s", 0.0),
+            t_stop_s=hc3_cfg.get("t_stop_s", None),
+            time_unit=hc3_cfg.get("time_unit", "samples"),
+            sample_rate_hz=hc3_cfg.get("sample_rate_hz", None),
+        )
+
+        print(f"Loaded HC-3 cache: {replay_cache.n_spikes} spikes from {replay_cache.n_units} units")
+
+        l2_regions = set(hc3_cfg.get("l2_regions", ["EC2"]))
+        l3_regions = set(hc3_cfg.get("l3_regions", ["EC3"]))
+        unit_meta = replay_cache.unit_metadata
+        l2_unit_indices = [i for i, meta in enumerate(unit_meta) if meta.get("region") in l2_regions]
+        l3_unit_indices = [i for i, meta in enumerate(unit_meta) if meta.get("region") in l3_regions]
+        print(f"Routing: {len(l2_unit_indices)} units → EC_L2_Exc, {len(l3_unit_indices)} units → EC_L3_Exc")
+
+        replay_conn_prob = float(hc3_cfg.get("replay_connection_probability", 0.2))
+        replay_weight_nS = float(hc3_cfg.get("replay_weight_nS", 0.8))
 
     # ---- build neuron groups
     groups: Dict[str, Any] = {}
@@ -166,20 +146,6 @@ def run_simulation(
 
     for pop_name, geom in pop_geom.items():
         pop_n = int(geom.xyz_mm.shape[0])
-        if pop_name in replay_streams:
-            stream = replay_streams[pop_name]
-            times = stream.get("times", np.array([]))
-            indices = stream.get("indices", np.array([], dtype=int))
-            groups[pop_name] = SpikeGeneratorGroup(
-                pop_n,
-                indices=indices,
-                times=times * second,
-                name=f"replay_{pop_name}",
-                sorted=True,
-            )
-            pop_sizes[pop_name] = pop_n
-            continue
-
         ctype_key = resolve_celltype_key(geom.cell_type, pop_name)
         ctype = pop_specs[ctype_key]
         G = make_population(
@@ -192,6 +158,21 @@ def run_simulation(
         )
         groups[pop_name] = G
         pop_sizes[pop_name] = pop_n
+
+    # Add hidden replay source if configured
+    if replay_cache is not None:
+        replay_input = SpikeGeneratorGroup(
+            replay_cache.n_units,
+            indices=replay_cache.spike_unit_idx,
+            times=replay_cache.spike_times_s * second,
+            sorted=True,
+            name="_HC3_Replay_Input",
+        )
+        groups["_HC3_Replay_Input"] = replay_input
+        pop_sizes["_HC3_Replay_Input"] = replay_cache.n_units
+        print(
+            f"Created replay input: {replay_cache.n_units} units, {replay_cache.n_spikes} spikes"
+        )
 
     # ---- background excitation (PoissonInput goes to conductances directly)
     bg_cfg = sim_cfg.get("background", {}) or {}
@@ -225,7 +206,7 @@ def run_simulation(
     for bg in iter_background_entries(bg_cfg):
         bg_rate_hz = float(bg.get("rate_hz", 0.0))
         bg_n = int(bg.get("n_sources", 0))
-        bg_w_ampa_nS = float(bg.get("w_ampa_nS", 0.0))
+        bg_w_ampa_nS = float(bg.get("w_ampa_nS", bg.get("weight_nS", 0.0)))
         bg_w_nmda_nS = float(bg.get("w_nmda_nS", 0.0))
         bg_targets = list(bg.get("targets", list(groups.keys())))
 
@@ -246,6 +227,35 @@ def run_simulation(
                 poisson_inputs.append(
                     PoissonInput(G, "g_nmda", N=bg_n, rate=bg_rate_hz * Hz, weight=bg_w_nmda_nS * nS)
                 )
+
+    # ---- replay modulation synapses (divergent)
+    replay_synapses: List[Synapses] = []
+    if replay_cache is not None:
+        if "EC_L2_Exc" in groups and l2_unit_indices:
+            S_L2 = Synapses(
+                groups["_HC3_Replay_Input"],
+                groups["EC_L2_Exc"],
+                on_pre=f"g_ampa += {replay_weight_nS}*nS",
+                name="HC3_to_EC_L2",
+            )
+            S_L2.connect(i=l2_unit_indices, p=replay_conn_prob)
+            replay_synapses.append(S_L2)
+            print(
+                f"Connected {len(S_L2)} replay→EC_L2_Exc synapses (p={replay_conn_prob})"
+            )
+
+        if "EC_L3_Exc" in groups and l3_unit_indices:
+            S_L3 = Synapses(
+                groups["_HC3_Replay_Input"],
+                groups["EC_L3_Exc"],
+                on_pre=f"g_ampa += {replay_weight_nS}*nS",
+                name="HC3_to_EC_L3",
+            )
+            S_L3.connect(i=l3_unit_indices, p=replay_conn_prob)
+            replay_synapses.append(S_L3)
+            print(
+                f"Connected {len(S_L3)} replay→EC_L3_Exc synapses (p={replay_conn_prob})"
+            )
 
     # ---- synapses for each pathway
     synapses = []
@@ -284,6 +294,7 @@ def run_simulation(
     net = Network()
     for obj in (
         list(groups.values())
+        + replay_synapses
         + synapses
         + list(spike_monitors.values())
         + list(state_monitors.values())
@@ -296,10 +307,14 @@ def run_simulation(
     # ---- collect spikes
     spikes: Dict[str, Tuple[np.ndarray, np.ndarray]] = {}
     summary: Dict[str, Any] = {"t_sim_s": t_sim_s, "dt_ms": dt_ms, "populations": {}}
-    if replay_streams:
+    if replay_cache is not None:
         summary["ec_replay"] = {
-            pop: {"n_units": stream.get("n_units", 0), "n_spikes": int(len(stream.get("indices", [])))}
-            for pop, stream in replay_streams.items()
+            "n_units": replay_cache.n_units,
+            "n_spikes": replay_cache.n_spikes,
+            "l2_units": len(l2_unit_indices),
+            "l3_units": len(l3_unit_indices),
+            "connection_probability": replay_conn_prob,
+            "weight_nS": replay_weight_nS,
         }
 
     for pop_name, mon in spike_monitors.items():

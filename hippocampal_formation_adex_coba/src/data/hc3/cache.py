@@ -32,6 +32,24 @@ class HC3CacheData:
     def n_spikes(self) -> int:
         return int(self.indices.shape[0])
 
+    @property
+    def spike_times_s(self) -> np.ndarray:
+        """Alias for compatibility with replay inputs."""
+        return self.times_s
+
+    @property
+    def spike_unit_idx(self) -> np.ndarray:
+        """Alias for compatibility with replay inputs."""
+        return self.indices
+
+    @property
+    def unit_metadata(self) -> list[dict[str, str]]:
+        """List of metadata dicts for each unit."""
+        return [
+            {"region": str(region), "cell_type": str(celltype)}
+            for region, celltype in zip(self.unit_region, self.unit_celltype)
+        ]
+
 
 _RES_RE = re.compile(r"\.res\.(\d+)$")
 _CLU_RE = re.compile(r"\.clu\.(\d+)$")
@@ -248,7 +266,7 @@ def load_hc3_cache(cache_path: str | Path) -> HC3CacheData:
     )
 
 
-def load_or_build_cache(
+def load_or_build_hc3_cache(
     session_tar_gz: str | Path,
     *,
     metadata_xlsx: str | Path,
@@ -278,3 +296,8 @@ def load_or_build_cache(
         sample_rate_hz=sample_rate_hz,
         cache_dir=cache_dir,
     )
+
+
+# Backwards compatibility alias
+def load_or_build_cache(*args, **kwargs):
+    return load_or_build_hc3_cache(*args, **kwargs)
