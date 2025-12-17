@@ -10,3 +10,4 @@ trimesh>=4.0
 brainglobe-atlasapi>=2.0
 pytest>=7.4
 requests
+pandas>=2.2
