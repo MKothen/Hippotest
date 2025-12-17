@@ -1,0 +1,52 @@
+# Example config enabling hc-3 replay input (see docs for data download)
+run_name: hippo3d_hc3_replay
+seed: 7
+
+hippocampome:
+  enabled: true
+
+anatomy:
+  atlas_name: allen_mouse_25um
+  hemisphere: left
+  regions:
+    DG: {structure_name: Dentate gyrus, layers: {OML: [0.0, 0.25], MML: [0.25, 0.5], IML: [0.5, 0.7], GCL: [0.7, 0.82], HIL: [0.82, 1.0]}}
+    CA3: {structure_name: Field CA3, layers: {SLM: [0.0, 0.25], SR: [0.25, 0.75], SP: [0.75, 0.85], SO: [0.85, 1.0]}}
+    CA1: {structure_name: Field CA1, layers: {SLM: [0.0, 0.25], SR: [0.25, 0.75], SP: [0.75, 0.85], SO: [0.85, 1.0]}}
+    EC: {structure_name: Entorhinal area, layers: {L1: [0.0, 0.15], L2: [0.15, 0.3], L3: [0.3, 0.45], L5: [0.45, 0.75], L6: [0.75, 1.0]}}
+
+populations:
+  EC_L2_Exc: {region: EC, soma_layer: L2, cell_type: EC_L2_Stellate, n: 800, placement: {mode: layer_weighted}}
+  EC_L3_Exc: {region: EC, soma_layer: L3, cell_type: EC_L3_Pyramidal, n: 800, placement: {mode: layer_weighted}}
+  DG_GC: {region: DG, soma_layer: GCL, cell_type: DG_Granule, n: 3000, placement: {mode: layer_weighted, layer_sigma_u: 0.12}}
+  DG_PV: {region: DG, soma_layer: GCL, cell_type: PV_Basket, n: 250, placement: {mode: volume}}
+  CA3_Pyr: {region: CA3, soma_layer: SP, cell_type: CA3_Pyramidal, n: 2000, placement: {mode: layer_weighted, layer_sigma_u: 0.15}}
+  CA1_Pyr: {region: CA1, soma_layer: SP, cell_type: CA1_Pyramidal, n: 2000, placement: {mode: layer_weighted, layer_sigma_u: 0.15}}
+
+connectivity:
+  pathways_file: configs/pathways_default.yaml
+  scale: 0.12
+
+simulation:
+  dt_ms: 0.1
+  t_sim_s: 1.0
+  background: {rate_hz: 0.0, n_sources: 0}
+
+# New: entorhinal replay source
+# Provide actual paths before running
+# ec_input.hc3.metadata_xlsx can be a .xlsx or the crcns-hc3-metadata-tables.zip
+
+# The regions list filters units at cache-build time; l2_regions/l3_regions control
+# how spikes are routed to EC_L2_Exc vs EC_L3_Exc populations.
+ec_input:
+  mode: hc3_replay
+  hc3:
+    session_tar_gz: /path/to/ec013.805.tar.gz
+    metadata_xlsx: /path/to/crcns-hc3-metadata-tables.zip
+    cache_dir: runs/hc3_cache
+    regions: ["EC2", "EC3"]
+    cell_types: ["p"]
+    t_start_s: 0.0
+    t_stop_s: 1200.0
+    time_unit: samples
+    l2_regions: ["EC2"]
+    l3_regions: ["EC3"]
