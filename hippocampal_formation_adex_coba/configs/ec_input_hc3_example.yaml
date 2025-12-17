@@ -268,11 +268,7 @@ connectivity:
 
 simulation:
   dt_ms: 0.1
-  t_sim_s: 1.0
-  background:
-    rate_hz: 1.0
-    n_sources: 50
-    weight_nS: 0.15
+  t_sim_s: 10.0
   codegen_target: cython
 
   synapse_kinetics:
@@ -284,21 +280,33 @@ simulation:
     E_nmda_mV: 0.0
     E_gabaa_mV: -75.0
     E_gabab_mV: -90.0
-# New: entorhinal replay source
-# Provide actual paths before running
-# ec_input.hc3.metadata_xlsx can be a .xlsx or the crcns-hc3-metadata-tables.zip
 
-# The regions list filters units at cache-build time; l2_regions/l3_regions control
-# how spikes are routed to EC_L2_Exc vs EC_L3_Exc populations.
-
-
-  record:
-    n_state_neurons_per_pop: 3
-
-  viz:
-    max_raster_neurons_per_pop: 250
-    rate_bin_ms: 5.0
-    rate_smooth_ms: 20.0
+  background:
+    # Structured EC drive remains dominant; add low-level stochastic inputs per field
+    n_sources: 30
+    w_ampa_nS: 0.12
+    w_nmda_nS: 0.03
+    profiles:
+      EC_drive:
+        n_sources: 50
+        rate_hz: 90.0
+        w_ampa_nS: 0.20
+        w_nmda_nS: 0.00
+        targets: ["EC_L2_Exc", "EC_L3_Exc"]
+      DG_low_noise:
+        rate_hz: 8.0
+        w_ampa_nS: 0.06
+        w_nmda_nS: 0.01
+        targets: ["DG_GC"]
+      CA3_CA2_excitable:
+        rate_hz: 22.0
+        targets: ["CA3_Pyr", "CA2_Pyr"]
+      CA1_moderate:
+        rate_hz: 14.0
+        targets: ["CA1_Pyr"]
+      SUB_moderate:
+        rate_hz: 12.0
+        targets: ["SUB_Pyr"]
   ec_input:
     mode: hc3_replay
     hc3:
@@ -312,5 +320,21 @@ simulation:
       time_unit: samples
       l2_regions: ["EC2"]
       l3_regions: ["EC3"]
-      replay_connection_probability: 0.2
-      replay_weight_nS: 0.8
+      replay_connection_probability: 0.5
+      replay_weight_nS: 1.0
+# New: entorhinal replay source
+# Provide actual paths before running
+# ec_input.hc3.metadata_xlsx can be a .xlsx or the crcns-hc3-metadata-tables.zip
+
+# The regions list filters units at cache-build time; l2_regions/l3_regions control
+# how spikes are routed to EC_L2_Exc vs EC_L3_Exc populations.
+
+
+  record:
+    n_state_neurons_per_pop: 3
+
+  viz:
+    max_raster_neurons_per_pop: 500
+    rate_bin_ms: 5.0
+    rate_smooth_ms: 20.0
+

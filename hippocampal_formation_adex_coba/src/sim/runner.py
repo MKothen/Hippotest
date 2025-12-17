@@ -58,7 +58,7 @@ def run_simulation(
     dt_ms = float(sim_cfg.get("dt_ms", 0.1))
     t_sim_s = float(sim_cfg.get("t_sim_s", 1.0))
     codegen = str(sim_cfg.get("codegen_target", "cython"))
-
+    rng = np.random.default_rng(int(config.get("seed", 1)))
     kinetics_cfg = sim_cfg.get("synapse_kinetics", {}) or {}
     kinetics = SynapseKinetics(**{k: float(v) for k, v in kinetics_cfg.items()}) if kinetics_cfg else DEFAULT_KINETICS
 
@@ -135,6 +135,8 @@ def run_simulation(
         unit_meta = replay_cache.unit_metadata
         l2_unit_indices = [i for i, meta in enumerate(unit_meta) if meta.get("region") in l2_regions]
         l3_unit_indices = [i for i, meta in enumerate(unit_meta) if meta.get("region") in l3_regions]
+        print(f"DEBUG: l2_unit_indices = {l2_unit_indices}")
+        print(f"DEBUG: l3_unit_indices = {l3_unit_indices}")
         print(f"Routing: {len(l2_unit_indices)} units → EC_L2_Exc, {len(l3_unit_indices)} units → EC_L3_Exc")
 
         replay_conn_prob = float(hc3_cfg.get("replay_connection_probability", 0.2))
@@ -238,7 +240,11 @@ def run_simulation(
                 on_pre=f"g_ampa += {replay_weight_nS}*nS",
                 name="HC3_to_EC_L2",
             )
-            S_L2.connect(i=l2_unit_indices, p=replay_conn_prob)
+            post_n = int(groups["EC_L2_Exc"].N)
+            src = np.repeat(np.asarray(l2_unit_indices, dtype=int), post_n)
+            tgt = np.tile(np.arange(post_n, dtype=int), len(l2_unit_indices))
+            mask = rng.random(src.size) < replay_conn_prob
+            S_L2.connect(i=src[mask], j=tgt[mask])
             replay_synapses.append(S_L2)
             print(
                 f"Connected {len(S_L2)} replay→EC_L2_Exc synapses (p={replay_conn_prob})"
@@ -251,7 +257,11 @@ def run_simulation(
                 on_pre=f"g_ampa += {replay_weight_nS}*nS",
                 name="HC3_to_EC_L3",
             )
-            S_L3.connect(i=l3_unit_indices, p=replay_conn_prob)
+            post_n = int(groups["EC_L3_Exc"].N)
+            src = np.repeat(np.asarray(l3_unit_indices, dtype=int), post_n)
+            tgt = np.tile(np.arange(post_n, dtype=int), len(l3_unit_indices))
+            mask = rng.random(src.size) < replay_conn_prob
+            S_L3.connect(i=src[mask], j=tgt[mask])
             replay_synapses.append(S_L3)
             print(
                 f"Connected {len(S_L3)} replay→EC_L3_Exc synapses (p={replay_conn_prob})"
