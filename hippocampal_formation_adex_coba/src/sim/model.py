@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -39,7 +38,6 @@ dg_gabab/dt = -g_gabab/tau_gabab : siemens
 
 B = 1.0/(1.0 + exp(-0.062*(v/mV))/3.57) : 1
 I_syn = g_ampa*(E_ampa - v) + g_nmda*B*(E_nmda - v) + g_gabaa*(E_gabaa - v) + g_gabab*(E_gabab - v) : amp
-
 I_ext : amp
 
 # parameters (constants per population)
@@ -76,6 +74,7 @@ def make_population(
     seed: int | None = None,
 ) -> NeuronGroup:
     prefs.codegen.target = codegen_target  # "numpy" or "cython" or "cpp_standalone"
+
     G = NeuronGroup(
         n,
         model=ADEx_COBA_EQS,
@@ -120,27 +119,88 @@ def make_population(
     return G
 
 
-def make_synapses(pre: NeuronGroup, post: NeuronGroup, name: str) -> Synapses:
+def make_synapses(pre: NeuronGroup, post: NeuronGroup, name: str, enable_stp: bool = True) -> Synapses:
     """
-    A single Synapses object can deliver AMPA/NMDA/GABA_A/GABA_B increments.
-    We store per-edge weights (siemens) and update postsyn conductances on spikes.
+    Create synapses with optional short-term plasticity (STP).
+    
+    Parameters
+    ----------
+    pre : NeuronGroup
+        Presynaptic neuron group
+    post : NeuronGroup
+        Postsynaptic neuron group
+    name : str
+        Name for the synapse object
+    enable_stp : bool
+        Whether to enable short-term plasticity (Tsodyks-Markram model)
+    
+    Returns
+    -------
+    Synapses
+        Brian2 Synapses object with STP if enabled
     """
-    S = Synapses(
-        pre,
-        post,
-        model=r"""
+    if enable_stp:
+        # Tsodyks-Markram STP model
+        # u: utilization of synaptic resources (release probability)
+        # R: available resources (fraction)
+        # Parameters can be set per-synapse after creation
+        S = Synapses(
+            pre,
+            post,
+            model=r"""
             w_ampa : siemens
             w_nmda : siemens
             w_gabaa : siemens
             w_gabab : siemens
-        """,
-        on_pre=r"""
+            
+            # STP variables (Tsodyks-Markram model)
+            u : 1  # utilization/release probability
+            R : 1  # available resources (0-1)
+            U : 1  # baseline release probability
+            tau_rec : second  # recovery time constant
+            tau_facil : second  # facilitation time constant
+            
+            du/dt = -u/tau_facil : 1 (clock-driven)
+            dR/dt = (1 - R)/tau_rec : 1 (clock-driven)
+            """,
+            on_pre=r"""
+            u += U * (1 - u)
+            r_eff = u * R
+            R -= r_eff
+            
+            g_ampa_post += w_ampa * r_eff
+            g_nmda_post += w_nmda * r_eff
+            g_gabaa_post += w_gabaa * r_eff
+            g_gabab_post += w_gabab * r_eff
+            """,
+            method="euler",
+            name=name,
+        )
+        # Default STP parameters (will be overridden per pathway)
+        S.U = 0.5
+        S.tau_rec = 100 * ms
+        S.tau_facil = 50 * ms
+        S.u = 0.0
+        S.R = 1.0
+    else:
+        # Original static synapses
+        S = Synapses(
+            pre,
+            post,
+            model=r"""
+            w_ampa : siemens
+            w_nmda : siemens
+            w_gabaa : siemens
+            w_gabab : siemens
+            """,
+            on_pre=r"""
             g_ampa_post += w_ampa
             g_nmda_post += w_nmda
             g_gabaa_post += w_gabaa
             g_gabab_post += w_gabab
-        """,
-        method="euler",
-        name=name,
-    )
+            """,
+            method="euler",
+            name=name,
+        )
+    
     return S
