@@ -28,6 +28,7 @@ from ..data.hc3.cache import load_or_build_hc3_cache, HC3CacheData
 
 # NEW: your single, information-dense activity plot
 from .plots import save_activity_figure
+from .plasticity_plots import save_plasticity_overview
 
 
 @dataclass
