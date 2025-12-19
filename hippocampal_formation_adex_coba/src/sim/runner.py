@@ -292,6 +292,13 @@ def run_simulation(
             S.w_gabaa = e.w_gabaa_nS * nS
             S.w_gabab = e.w_gabab_nS * nS
             S.delay = e.delay_ms * ms
+                    # Initialize STP parameters if enabled
+        if hasattr(S, 'U'):
+            S.U = 0.5
+            S.tau_rec = 100 * ms
+            S.tau_facil = 50 * ms
+            S.u = 0.0
+            S.R = 1.0
         synapses.append(S)
 
     # ---- monitors
