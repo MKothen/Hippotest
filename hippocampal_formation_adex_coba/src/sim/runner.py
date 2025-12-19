@@ -325,7 +325,7 @@ def run_simulation(
                         plasticity_monitors[pname] = StateMonitor(
                                         S,
                                         variables=['u', 'R'],
-                                        record=np.arange(min(10, int(S.N))),
+                                        record=np.arange(min(10, len(S))),
                                         name=f"pl_{pname}",
                                     )
 
