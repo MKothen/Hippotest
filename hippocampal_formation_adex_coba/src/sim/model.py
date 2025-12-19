@@ -174,13 +174,7 @@ def make_synapses(pre: NeuronGroup, post: NeuronGroup, name: str, enable_stp: bo
             method="euler",
             name=name,
         )
-        # Default STP parameters (will be overridden per pathway)
-        S.U = 0.5
-        S.tau_rec = 100 * ms
-        S.tau_facil = 50 * ms
-        S.u = 0.0
-        S.R = 1.0
-    else:
+        :
         # Original static synapses
         S = Synapses(
             pre,
