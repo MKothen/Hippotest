@@ -321,7 +321,7 @@ def run_simulation(
 
         # ---- plasticity monitors (for STP dynamics)
         plasticity_monitors: Dict[str, StateMonitor] = {}
-            for pname, S in [(pname, s) for pname, s in zip([f"syn_{pn}" for pn in edges.keys()], synapses) if hasattr(s, 'u')]:
+        for pname, S in [(pname, s) for pname, s in zip([f"syn_{pn}" for pn in edges.keys()], synapses) if hasattr(s, 'u')]:
                         plasticity_monitors[pname] = StateMonitor(
                                         S,
                                         variables=['u', 'R'],
