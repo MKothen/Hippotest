@@ -18,7 +18,6 @@ from .plasticity import (
     validate_hierarchy,
 )
 from .plots import save_activity_figure, save_plasticity_figure
-
 __all__ = [
     "make_population",
     "make_synapses",
@@ -38,6 +37,4 @@ __all__ = [
     "check_observability",
     "temporal_scaling_factor",
     "validate_hierarchy",
-    "save_activity_figure",
-    "save_plasticity_figure",
 ]
