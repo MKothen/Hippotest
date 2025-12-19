@@ -319,6 +319,16 @@ def run_simulation(
                 name=f"st_{pop_name}",
             )
 
+        # ---- plasticity monitors (for STP dynamics)
+        plasticity_monitors: Dict[str, StateMonitor] = {}
+            for pname, S in [(pname, s) for pname, s in zip([f"syn_{pn}" for pn in edges.keys()], synapses) if hasattr(s, 'u')]:
+                        plasticity_monitors[pname] = StateMonitor(
+                                        S,
+                                        variables=['u', 'R'],
+                                        record=True,
+                                        name=f"pl_{pname}",
+                                    )
+
     # ---- run network
     net = Network()
     for obj in (
@@ -327,6 +337,7 @@ def run_simulation(
         + synapses
         + list(spike_monitors.values())
         + list(state_monitors.values())
+                + list(plasticity_monitors.values())
         + poisson_inputs
     ):
         net.add(obj)
@@ -387,6 +398,16 @@ def run_simulation(
             "g_gabab_nS": np.asarray(mon.g_gabab / nS, dtype=float),
         }
 
+        # ---- collect plasticity data
+        plasticity_data: Dict[str, Dict[str, np.ndarray]] = {}
+    for pname, mon in plasticity_monitors.items():
+                t_s = _as_float_array(mon.t / second)
+                plasticity_data[pname] = {
+                                "t_s": t_s,
+                                "u": np.asarray(mon.u, dtype=float),
+                                "R": np.asarray(mon.R, dtype=float),
+                            }
+
     # ---- save outputs
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "plots").mkdir(parents=True, exist_ok=True)
@@ -407,6 +428,14 @@ def run_simulation(
         state_traces=state_traces if len(state_traces) else None,
     )
 
+    # Save plasticity overview figure
+    if plasticity_data:
+                save_plasticity_overview(
+                                plasticity_data=plasticity_data,
+                                out_path=out_dir / "plots" / "plasticity_overview.png",
+                                t_max_s=t_sim_s,
+                            )
+
     # Save raw spikes and state
     npz = {}
     for pop_name, (t, i) in spikes.items():
@@ -420,6 +449,10 @@ def run_simulation(
         npz[f"{pop_name}_g_nmda_nS"] = tr["g_nmda_nS"]
         npz[f"{pop_name}_g_gabaa_nS"] = tr["g_gabaa_nS"]
         npz[f"{pop_name}_g_gabab_nS"] = tr["g_gabab_nS"]
+            for pname, pd in plasticity_data.items():
+                        npz[f"{pname}_plasticity_t_s"] = pd["t_s"]
+                        npz[f"{pname}_u"] = pd["u"]
+                        npz[f"{pname}_R"] = pd["R"]
 
     save_npz(npz, out_dir / "data" / "sim_outputs.npz")
 
