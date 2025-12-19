@@ -203,12 +203,10 @@ def descendant_ids(atlas: Any, root_id: int) -> List[int]:
 
 
 def mask_for_structure_ids(annotation: np.ndarray, ids: List[int]) -> np.ndarray:
-    max_id = int(annotation.max())
-    lut = np.zeros(max_id + 1, dtype=bool)
-    for sid in ids:
-        if 0 <= sid <= max_id:
-            lut[sid] = True
-    return lut[annotation]
+    # Use np.isin for memory-efficient membership test instead of lookup table
+    # This avoids allocating huge arrays when max(ids) is very large
+    id_set = set(ids)
+    return np.isin(annotation, list(id_set))
 
 
 def atlas_resolution_um(atlas: Any) -> np.ndarray:
