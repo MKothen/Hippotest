@@ -154,9 +154,7 @@ def make_synapses(pre: NeuronGroup, post: NeuronGroup, name: str, enable_stp: bo
             w_gabab : siemens
             
             # STP variables (Tsodyks-Markram model)
-            u : 1  # utilization/release probability
-            R : 1  # available resources (0-1)
-            U : 1  # baseline release probability
+                                    U : 1  # baseline release probability
             tau_rec : second  # recovery time constant
             tau_facil : second  # facilitation time constant
             
