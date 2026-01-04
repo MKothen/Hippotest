@@ -7,6 +7,14 @@ from typing import Dict, Tuple, Any, List, Optional
 import numpy as np
 import matplotlib.pyplot as plt
 
+from .plasticity import (
+    BTSPLearningRule,
+    STPMechanism,
+    TemporalScalingConfig,
+    bidirectional_plasticity,
+    temporal_scaling_factor,
+)
+
 
 def _ensure_parent(p: Path) -> None:
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -235,5 +243,201 @@ def save_activity_figure(
                 ax_in.tick_params(labelsize=7)
 
     fig.suptitle("Hippocampal-formation network activity overview", fontsize=14)
+    fig.savefig(out_path, dpi=200)
+    plt.close(fig)
+
+
+def _simulate_stp(
+    duration_s: float = 120.0,
+    hfs_time_s: float = 10.0,
+    stim_rate_hz_before: float = 0.5,
+    stim_rate_hz_after: float = 5.0,
+    rrp_scale: float = 2.5,
+    pr_after: float = 0.6,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Generate an STP trajectory before and after a tetanus.
+
+    The simulation uses 1-second steps for clarity: a brief HFS expands the
+    readily releasable pool and increases release probability. Subsequent
+    stimulation drives activity-dependent decay back toward baseline.
+    """
+
+    stp = STPMechanism()
+    t = np.arange(0.0, duration_s + 1.0, 1.0)
+    rrp: List[float] = []
+    pr: List[float] = []
+
+    for tt in t:
+        if np.isclose(tt, hfs_time_s):
+            stp.apply_hfs(rrp_scale=rrp_scale, pr_after=pr_after)
+
+        stim_rate = stim_rate_hz_before if tt < hfs_time_s else stim_rate_hz_after
+        stp.decay_with_activity(stim_rate)
+
+        rrp.append(stp.rrp_current)
+        pr.append(stp.pr)
+
+    return t, np.asarray(rrp), np.asarray(pr)
+
+
+def _btsp_probabilities(delta_t: np.ndarray, p_gate: float) -> Tuple[np.ndarray, np.ndarray]:
+    """Probability of LTP/LTD for binary BTSP weights across timing offsets."""
+
+    rule = BTSPLearningRule(p_gate=p_gate, rng=np.random.default_rng(seed=1))
+    p_ltp = np.zeros_like(delta_t)
+    p_ltd = np.zeros_like(delta_t)
+
+    for idx, dt in enumerate(delta_t):
+        if -3.0 <= dt <= 2.0:
+            # gate must pass and weight must be silent
+            p_ltp[idx] = p_gate
+        if (-6.0 <= dt < -3.0) or (2.0 < dt <= 4.0):
+            p_ltd[idx] = p_gate
+
+    return p_ltp, p_ltd
+
+
+def _synaptic_tag_windows(config: TemporalScalingConfig) -> Dict[str, float]:
+    p = config.plasticity_params
+    return {
+        "weak_tag": p.tag_lifetime_w_to_s_s / 60.0,
+        "strong_tag": p.tag_lifetime_s_to_w_s / 60.0,
+        "prp": p.prp_availability_s / 60.0,
+    }
+
+
+def _structural_trajectory(hours: int = 60, arc_onset_h: int = 12, active_every_h: int = 2) -> Tuple[np.ndarray, np.ndarray]:
+    """Simulate survival/stabilization of a spine over several days."""
+
+    from .plasticity import Spine  # local import to avoid cycles
+
+    spine = Spine()
+    status = []
+    t = np.arange(0, hours + 1)
+    pruned_at = None
+
+    for h in t:
+        if h >= arc_onset_h:
+            spine.has_arc_expression = True
+        outcome = spine.update(active_this_hour=(h % active_every_h == 0))
+        if spine.is_stabilized:
+            status.append(1)
+        elif outcome == "PRUNE" and pruned_at is None:
+            pruned_at = h
+            status.append(-1)
+        else:
+            status.append(0)
+
+    if pruned_at is not None:
+        status = [s if idx <= pruned_at else -1 for idx, s in enumerate(status)]
+
+    return t, np.asarray(status)
+
+
+def save_plasticity_figure(
+    out_path: Path,
+    *,
+    config: Optional[TemporalScalingConfig] = None,
+    ca_range: Tuple[float, float] = (0.0, 2.0),
+    p_gate: float = 0.5,
+) -> None:
+    """Create a multi-panel overview of plasticity primitives.
+
+    Panels include:
+    - STP timecourse (RRP and release probability before/after HFS)
+    - Calcium-dependent bidirectional plasticity curve
+    - BTSP timing-dependent probabilities for binary weights
+    - Synaptic tagging/capture windows after temporal compression
+    - Structural plasticity trajectory (Arc + activity dependent)
+    - Temporal scaling comparison for core LTP stages
+    """
+
+    cfg = config or TemporalScalingConfig(target_sim_minutes=10.0, biological_max_hours=48.0)
+    _ensure_parent(out_path)
+
+    # --- Precompute traces
+    t_stp, rrp, pr = _simulate_stp()
+    ca = np.linspace(ca_range[0], ca_range[1], 400)
+    plasticity_curve = np.array([bidirectional_plasticity(c) for c in ca])
+    delta_t = np.linspace(-6.0, 4.0, 200)
+    p_ltp, p_ltd = _btsp_probabilities(delta_t, p_gate)
+    tag_windows = _synaptic_tag_windows(cfg)
+    t_spine, spine_status = _structural_trajectory()
+
+    p = cfg.plasticity_params
+    durations = {
+        "STP half-life": 35.0,  # minutes
+        "LTP1": p.ltp1_duration_s / 60.0,
+        "LTP2": p.ltp2_duration_s / 60.0,
+        "LTP3 onset": p.ltp3_onset_s / 60.0,
+    }
+    original = {
+        "STP half-life": 35.0,
+        "LTP1": 120.0,
+        "LTP2": 360.0,
+        "LTP3 onset": 480.0,
+    }
+
+    fig, axes = plt.subplots(3, 2, figsize=(15, 12))
+
+    # STP
+    ax = axes[0, 0]
+    ax.plot(t_stp, rrp, label="RRP size")
+    ax.plot(t_stp, pr, label="Release probability")
+    ax.axvline(10.0, color="k", linestyle="--", alpha=0.6, label="HFS")
+    ax.set_xlabel("time (s)")
+    ax.set_ylabel("relative value")
+    ax.set_title("STP induction and use-dependent decay")
+    ax.legend()
+
+    # Calcium plasticity
+    ax = axes[0, 1]
+    ax.plot(ca, plasticity_curve, color="purple")
+    ax.axhline(0.0, color="k", linewidth=0.8)
+    ax.set_xlabel("[Ca] (µM)")
+    ax.set_ylabel("Δ weight (arb)")
+    ax.set_title("Bidirectional plasticity (sigmoid thresholds)")
+
+    # BTSP
+    ax = axes[1, 0]
+    ax.plot(delta_t, p_ltp, label="P(LTP | weight=0)")
+    ax.plot(delta_t, p_ltd, label="P(LTD | weight=1)")
+    ax.axvspan(-6, -3, color="tab:orange", alpha=0.1)
+    ax.axvspan(-3, 2, color="tab:green", alpha=0.1)
+    ax.axvspan(2, 4, color="tab:orange", alpha=0.1)
+    ax.set_xlabel("Δt = t_synapse - t_plateau (s)")
+    ax.set_ylabel("probability")
+    ax.set_title("BTSP stochasticity and temporal window")
+    ax.legend()
+
+    # Tagging windows
+    ax = axes[1, 1]
+    ax.barh(["Weak→Strong tag", "Strong→Weak PRP"], [tag_windows["weak_tag"], tag_windows["strong_tag"]], color=["tab:blue", "tab:red"])
+    ax.barh(["PRP availability"], [tag_windows["prp"]], color="tab:gray")
+    ax.set_xlabel("duration (minutes, compressed)")
+    ax.set_title("Synaptic tagging & capture windows (scaled)")
+
+    # Structural plasticity
+    ax = axes[2, 0]
+    ax.step(t_spine, spine_status, where="post")
+    ax.set_xlabel("hours since spine formation")
+    ax.set_ylabel("state (-1=pruned, 0=labile, 1=stabilized)")
+    ax.set_title("Spine stabilization with Arc + activity")
+    ax.set_ylim(-1.2, 1.2)
+
+    # Temporal scaling comparison
+    ax = axes[2, 1]
+    y = np.arange(len(durations))
+    width = 0.35
+    ax.barh(y - width / 2, list(original.values()), height=width, label="biological (min)", color="tab:gray", alpha=0.5)
+    ax.barh(y + width / 2, list(durations.values()), height=width, label="scaled (min)", color="tab:green")
+    ax.set_yticks(y)
+    ax.set_yticklabels(list(durations.keys()))
+    ax.set_xlabel("duration (minutes)")
+    ax.set_title(f"Temporal compression (CF={cfg.compression_factor:.0f}x)")
+    ax.legend()
+
+    fig.suptitle("Plasticity overview: synaptic, structural, and temporal scaling", fontsize=16)
+    fig.tight_layout(rect=[0, 0.03, 1, 0.97])
     fig.savefig(out_path, dpi=200)
     plt.close(fig)
