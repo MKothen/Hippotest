@@ -10,14 +10,14 @@ pathways:
     pre_pop: EC_L2_Exc
     post_pop: DG_GC
     kind: exc
-    k_out_mean: 45
+    k_out_mean: 60
     k_out_std: 10
     radius_mm: 2.5
     sigma_mm: 1.0
     velocity_m_per_s: 0.4
     base_delay_ms: 2.0
     target_layers: {OML: 0.55, MML: 0.30, IML: 0.15}
-    synapse: {w_ampa_nS: 0.85, w_nmda_nS: 0.35}
+    synapse: {w_ampa_nS: 2.0, w_nmda_nS: 0.35}
 
   - name: EC_L2_to_DG_PV_feedforward
     pre_pop: EC_L2_Exc
@@ -30,7 +30,7 @@ pathways:
     velocity_m_per_s: 0.4
     base_delay_ms: 2.0
     target_layers: {GCL: 1.0}
-    synapse: {w_ampa_nS: 0.55, w_nmda_nS: 0.10}
+    synapse: {w_ampa_nS: 0.3, w_nmda_nS: 0.10}
 
   - name: EC_L2_to_DG_SOM_feedforward
     pre_pop: EC_L2_Exc
@@ -186,7 +186,7 @@ pathways:
     velocity_m_per_s: 0.4
     base_delay_ms: 3.0
     target_layers: {SLM: 1.0}
-    synapse: {w_ampa_nS: 0.38, w_nmda_nS: 0.20}
+    synapse: {w_ampa_nS: 1.5, w_nmda_nS: 0.20}
 
   - name: EC_L3_to_CA1_SOM
     pre_pop: EC_L3_Exc
@@ -199,7 +199,7 @@ pathways:
     velocity_m_per_s: 0.4
     base_delay_ms: 3.0
     target_layers: {SLM: 1.0}
-    synapse: {w_ampa_nS: 0.65, w_nmda_nS: 0.15}
+    synapse: {w_ampa_nS: 2.0, w_nmda_nS: 0.15}
 
   # -------------------------
   # Direct EC Inputs
@@ -241,7 +241,7 @@ pathways:
     velocity_m_per_s: 0.4
     base_delay_ms: 3.0
     target_layers: {SLM: 1.0}
-    synapse: {w_ampa_nS: 0.55, w_nmda_nS: 0.10}
+    synapse: {w_ampa_nS: 2.0, w_nmda_nS: 0.10}
 
   # -------------------------
   # CA2 Projections
@@ -437,7 +437,7 @@ pathways:
     velocity_m_per_s: 0.3
     base_delay_ms: 1.0
     target_layers: {GCL: 1.0}
-    synapse: {w_gabaa_nS: 3.5}
+    synapse: {w_gabaa_nS: 1.5}
 
   - name: DG_SOM_to_DG_GC
     pre_pop: DG_SOM
@@ -768,7 +768,7 @@ pathways:
     velocity_m_per_s: 0.3
     base_delay_ms: 1.0
     target_layers: {L2: 1.0}
-    synapse: {w_gabaa_nS: 3.2}
+    synapse: {w_gabaa_nS: 1.6}
 
   - name: EC_SOM_to_EC_L2_Exc
     pre_pop: EC_SOM
@@ -781,7 +781,7 @@ pathways:
     velocity_m_per_s: 0.25
     base_delay_ms: 1.5
     target_layers: {L2: 1.0}
-    synapse: {w_gabaa_nS: 1.8, w_gabab_nS: 0.5}
+    synapse: {w_gabaa_nS: 0.8, w_gabab_nS: 0.5}
 
   - name: EC_PV_to_EC_L3_Exc
     pre_pop: EC_PV
