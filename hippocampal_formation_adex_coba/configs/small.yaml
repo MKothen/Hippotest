@@ -289,7 +289,7 @@ simulation:
     profiles:
       EC_drive:
         n_sources: 50
-        rate_hz: 100.0
+        rate_hz: 50.0
         w_ampa_nS: 0.20
         w_nmda_nS: 0.00
         targets: ["EC_L2_Exc", "EC_L3_Exc"]

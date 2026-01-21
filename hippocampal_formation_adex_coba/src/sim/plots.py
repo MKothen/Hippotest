@@ -77,6 +77,7 @@ def save_activity_figure(
     rate_bin_ms: float = 5.0,
     rate_smooth_ms: float = 20.0,
     state_traces: Optional[Dict[str, Dict[str, np.ndarray]]] = None,
+    heatmap_t_start_s: float = 0.0,  # <--- NEW ARGUMENT
 ) -> None:
     """
     Create a single, information-dense activity figure.
@@ -108,7 +109,14 @@ def save_activity_figure(
     # Make a common time axis for heatmap (use the first)
     t_axis = rates_t[pops[0]]
     H = np.stack([np.interp(t_axis, rates_t[p], rates_hz[p]) for p in pops], axis=0)  # (P, T)
-
+    mask = t_axis >= heatmap_t_start_s
+    if not np.any(mask):
+        # Fallback if start time is past simulation end
+        t_axis_heat = t_axis
+        H_heat = H
+    else:
+        t_axis_heat = t_axis[mask]
+        H_heat = H[:, mask]
     # Region-summed traces
     regions = ["EC", "DG", "CA3", "CA2", "CA1", "SUB"]
     region_traces = {}
@@ -177,10 +185,11 @@ def save_activity_figure(
 
     # --- Heatmap: pop x time
     im = ax_heat.imshow(
-        H,
+        H_heat,  # Use cropped data
         aspect="auto",
         origin="lower",
-        extent=[t_axis[0], t_axis[-1], 0, len(pops)],
+        # Update extent to match the cropped time axis
+        extent=[t_axis_heat[0], t_axis_heat[-1], 0, len(pops)],
     )
     ax_heat.set_title("Population rate heatmap (Hz per neuron)")
     ax_heat.set_xlabel("time (s)")

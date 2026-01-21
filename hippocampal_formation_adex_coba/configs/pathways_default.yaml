@@ -17,7 +17,7 @@ pathways:
     velocity_m_per_s: 0.4
     base_delay_ms: 2.0
     target_layers: {OML: 0.55, MML: 0.30, IML: 0.15}
-    synapse: {w_ampa_nS: 4.0, w_nmda_nS: 4.0}
+    synapse: {w_ampa_nS: 1.0, w_nmda_nS: 1.0}
 
   - name: EC_L2_to_DG_PV_feedforward
     pre_pop: EC_L2_Exc
@@ -59,7 +59,7 @@ pathways:
     velocity_m_per_s: 0.35
     base_delay_ms: 3.0
     target_layers: {SR: 0.50, SL: 0.35, SP: 0.15}
-    synapse: {w_ampa_nS: 1.8, w_nmda_nS: 0.25}
+    synapse: {w_ampa_nS: 2.8, w_nmda_nS: 1.25}
 
   - name: DG_to_CA3_PV_feedforward
     pre_pop: DG_GC

@@ -152,12 +152,11 @@ def make_synapses(pre: NeuronGroup, post: NeuronGroup, name: str, enable_stp: bo
             w_nmda : siemens
             w_gabaa : siemens
             w_gabab : siemens
-            
-            # STP variables (Tsodyks-Markram model)
-                                    U : 1  # baseline release probability
-            tau_rec : second  # recovery time constant
-            tau_facil : second  # facilitation time constant
-            
+            t_stp_on : second (constant)
+
+            U : 1  
+            tau_rec : second
+            tau_facil : second  
             du/dt = -u/tau_facil : 1 (clock-driven)
             dR/dt = (1 - R)/tau_rec : 1 (clock-driven)
             """,
@@ -174,7 +173,8 @@ def make_synapses(pre: NeuronGroup, post: NeuronGroup, name: str, enable_stp: bo
             method="euler",
             name=name,
         )
-        :
+    else:
+        
         # Original static synapses
         S = Synapses(
             pre,

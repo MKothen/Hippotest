@@ -301,12 +301,47 @@ def run_simulation(
             S.delay = e.delay_ms * ms
 
         # Only apply STP defaults if the model actually HAS those variables
+        # Only apply STP defaults if the model actually HAS those variables
         if use_stp and hasattr(S, 'U'):
-            S.U = 0.5       # Consider lowering this to 0.1 for facilitation
-            S.tau_rec = 100 * ms
-            S.tau_facil = 50 * ms
-            S.u = 0.0       # Initial u
-            S.R = 1.0       # Full resources start
+            S.u = 0.0       # Initialize utilization variable
+            S.R = 1.0       # Initialize resources (full)
+            S.t_stp_on = 100 * ms
+
+            # --- Define pathway-specific parameters ---
+            
+            # 1. Mossy Fibers (DG -> CA3): Strong FACILITATION
+            # "Induction and expression of LTP is presynaptic... increase in transmitter release" [file:2]
+            if "DG" in e.spec.pre_pop and "CA3" in e.spec.post_pop:
+                S.U = 0.04           # Low initial release probability
+                S.tau_rec = 100 * ms # Fast recovery
+                S.tau_facil = 500 * ms # Long memory for facilitation
+
+            # 2. Schaffer Collaterals (CA3 -> CA1): Mixed / Weak Facilitation
+            # "STP1 is a presynaptic form... expressed by an increase in pr" [file:2]
+            elif "CA3" in e.spec.pre_pop and "CA1" in e.spec.post_pop:
+                S.U = 0.2
+                S.tau_rec = 200 * ms
+                S.tau_facil = 200 * ms
+
+            # 3. Inhibitory (PV/Soma-targeting): DEPRESSION
+            # "Synapses made by PV-positive interneurons exhibit paired pulse depression" [file:2]
+            elif "PV" in e.spec.pre_pop or "Basket" in e.spec.pre_pop:
+                S.U = 0.5            # High initial release probability
+                S.tau_rec = 500 * ms # Slow recovery (depresses strongly)
+                S.tau_facil = 20 * ms
+            
+            # 4. Inhibitory (CCK/Dendrite-targeting): FACILITATION
+            elif "OLM" in e.spec.pre_pop or "SOM" in e.spec.pre_pop:
+                S.U = 0.1
+                S.tau_rec = 100 * ms
+                S.tau_facil = 400 * ms
+
+            # 5. Default Excitatory (Weak Depression)
+            else:
+                S.U = 0.4
+                S.tau_rec = 150 * ms
+                S.tau_facil = 50 * ms
+
             
         synapses.append(S)
 
@@ -341,7 +376,30 @@ def run_simulation(
                 record=np.arange(n_rec),
                 name=f"pl_{mon_key}",
             )
-
+    theta_freq = 8.0 
+    
+    print("Injecting Medial Septum Theta (8 Hz)...")
+    
+    # 1. Drive EC inputs rhythmically
+    if "EC_L2_Exc" in groups:
+        # I_ext = Amplitude * (0.5 + 0.5*sin(t)) -> Rhythmic positive current
+        groups["EC_L2_Exc"].run_regularly(
+            'I_ext = 150*pA * (0.5 + 0.5 * sin(2*pi*(8.0*Hz)*t))', 
+            dt=dt_ms*ms
+        )
+    if "EC_L3_Exc" in groups:
+        groups["EC_L3_Exc"].run_regularly(
+            f'I_ext = 150*pA * (0.5 + 0.5 * sin(2*pi*(8.0*Hz)*t))', 
+            dt=dt_ms*ms
+        )
+    # 2. Pace the Inhibition (PV cells are strongly theta-modulated)
+    # This creates the "vertical stripes" of inhibition in the raster
+    for name, G in groups.items():
+        if "PV" in name or "SOM" in name:
+            G.run_regularly(
+                'I_ext = 40*pA * (0.5 + 0.5 * sin(2*pi*(8.0*Hz)*t))', 
+                dt=dt_ms*ms
+            )
     # ---- run network
     net = Network()
     for obj in (
@@ -446,7 +504,6 @@ def run_simulation(
         save_plasticity_overview(
             plasticity_data=plasticity_data,
             out_path=out_dir / "plots" / "plasticity_overview.png",
-            t_max_s=t_sim_s,
         )
 
     # Save raw spikes and state
