@@ -13,6 +13,31 @@ try:
 except AttributeError:
     pass
 
+# FIX: Patch imageio-ffmpeg if it doesn't support audio_path
+# This handles the "write_frames() got an unexpected keyword argument 'audio_path'" error
+# caused by mismatched imageio/imageio-ffmpeg versions.
+try:
+    import imageio_ffmpeg
+    import inspect
+    
+    if hasattr(imageio_ffmpeg, 'write_frames'):
+        sig = inspect.signature(imageio_ffmpeg.write_frames)
+        if 'audio_path' not in sig.parameters:
+            _orig_write_frames = imageio_ffmpeg.write_frames
+            
+            def _patched_write_frames(path, source, **kwargs):
+                # Remove audio arguments if present, as the underlying function doesn't support them
+                kwargs.pop('audio_path', None)
+                kwargs.pop('audio_codec', None)
+                return _orig_write_frames(path, source, **kwargs)
+                
+            imageio_ffmpeg.write_frames = _patched_write_frames
+            print("[info] Patched imageio_ffmpeg.write_frames to ignore audio arguments")
+except (ImportError, Exception):
+    # If imageio_ffmpeg is not found or introspection fails, proceed without patching.
+    # The error might not occur, or will raise naturally.
+    pass
+
 from .regions import RegionGeometry
 
 
