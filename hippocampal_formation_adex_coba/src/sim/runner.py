@@ -280,11 +280,18 @@ def run_simulation(
                 print("Replay→EC_L3_Exc: fallback full connection (mask empty)")
 
     # ---- synapses for each pathway
+
     synapses = []
     for pname, e in edges.items():
         pre = groups[e.spec.pre_pop]
         post = groups[e.spec.post_pop]
-        S = make_synapses(pre, post, name=f"syn_{pname}")
+
+        # HACK: Disable STP for EC inputs to prevent depression from killing the drive
+        # You can also set this to False globally to verify the network first
+        use_stp = "EC" not in pname  
+        
+        S = make_synapses(pre, post, name=f"syn_{pname}", enable_stp=use_stp)
+        
         if e.pre_idx.size > 0:
             S.connect(i=e.pre_idx, j=e.post_idx)
             S.w_ampa = e.w_ampa_nS * nS
@@ -292,18 +299,21 @@ def run_simulation(
             S.w_gabaa = e.w_gabaa_nS * nS
             S.w_gabab = e.w_gabab_nS * nS
             S.delay = e.delay_ms * ms
-                    # Initialize STP parameters if enabled
-        if hasattr(S, 'U'):
-            S.U = 0.5
+
+        # Only apply STP defaults if the model actually HAS those variables
+        if use_stp and hasattr(S, 'U'):
+            S.U = 0.5       # Consider lowering this to 0.1 for facilitation
             S.tau_rec = 100 * ms
             S.tau_facil = 50 * ms
-            S.u = 0.0
-            S.R = 1.0
+            S.u = 0.0       # Initial u
+            S.R = 1.0       # Full resources start
+            
         synapses.append(S)
 
     # ---- monitors
     spike_monitors: Dict[str, SpikeMonitor] = {}
     state_monitors: Dict[str, StateMonitor] = {}
+    plasticity_monitors: Dict[str, StateMonitor] = {}
 
     rec_cfg = sim_cfg.get("record", {}) or {}
     n_state = int(rec_cfg.get("n_state_neurons_per_pop", 3))
@@ -319,15 +329,18 @@ def run_simulation(
                 name=f"st_{pop_name}",
             )
 
-        # ---- plasticity monitors (for STP dynamics)
-        plasticity_monitors: Dict[str, StateMonitor] = {}
-        for pname, S in [(pname, s) for pname, s in zip([f"syn_{pn}" for pn in edges.keys()], synapses) if hasattr(s, 'u')]:
-                        plasticity_monitors[pname] = StateMonitor(
-                                        S,
-                                        variables=['u', 'R'],
-                                        record=np.arange(min(10, len(S))),
-                                        name=f"pl_{pname}",
-                                    )
+    # ---- plasticity monitors (for STP dynamics)
+    # Record a small subset of synapses (first n_rec) for pathways that expose STP state (u, R).
+    for edge_name, S in zip(list(edges.keys()), synapses):
+        mon_key = f"syn_{edge_name}"
+        if hasattr(S, "u") and hasattr(S, "R") and len(S) > 0:
+            n_rec = min(10, len(S))
+            plasticity_monitors[mon_key] = StateMonitor(
+                S,
+                variables=["u", "R"],
+                record=np.arange(n_rec),
+                name=f"pl_{mon_key}",
+            )
 
     # ---- run network
     net = Network()
@@ -337,7 +350,7 @@ def run_simulation(
         + synapses
         + list(spike_monitors.values())
         + list(state_monitors.values())
-                + list(plasticity_monitors.values())
+        + list(plasticity_monitors.values())
         + poisson_inputs
     ):
         net.add(obj)
@@ -398,15 +411,15 @@ def run_simulation(
             "g_gabab_nS": np.asarray(mon.g_gabab / nS, dtype=float),
         }
 
-        # ---- collect plasticity data
-        plasticity_data: Dict[str, Dict[str, np.ndarray]] = {}
+    # ---- collect plasticity data
+    plasticity_data: Dict[str, Dict[str, np.ndarray]] = {}
     for pname, mon in plasticity_monitors.items():
-                t_s = _as_float_array(mon.t / second)
-                plasticity_data[pname] = {
-                                "t_s": t_s,
-                                "u": np.asarray(mon.u, dtype=float),
-                                "R": np.asarray(mon.R, dtype=float),
-                            }
+        t_s = _as_float_array(mon.t / second)
+        plasticity_data[pname] = {
+            "t_s": t_s,
+            "u": np.asarray(mon.u, dtype=float),
+            "R": np.asarray(mon.R, dtype=float),
+        }
 
     # ---- save outputs
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -430,11 +443,11 @@ def run_simulation(
 
     # Save plasticity overview figure
     if plasticity_data:
-                save_plasticity_overview(
-                                plasticity_data=plasticity_data,
-                                out_path=out_dir / "plots" / "plasticity_overview.png",
-                                t_max_s=t_sim_s,
-                            )
+        save_plasticity_overview(
+            plasticity_data=plasticity_data,
+            out_path=out_dir / "plots" / "plasticity_overview.png",
+            t_max_s=t_sim_s,
+        )
 
     # Save raw spikes and state
     npz = {}
@@ -449,10 +462,11 @@ def run_simulation(
         npz[f"{pop_name}_g_nmda_nS"] = tr["g_nmda_nS"]
         npz[f"{pop_name}_g_gabaa_nS"] = tr["g_gabaa_nS"]
         npz[f"{pop_name}_g_gabab_nS"] = tr["g_gabab_nS"]
-            for pname, pd in plasticity_data.items():
-                        npz[f"{pname}_plasticity_t_s"] = pd["t_s"]
-                        npz[f"{pname}_u"] = pd["u"]
-                        npz[f"{pname}_R"] = pd["R"]
+
+    for pname, pd in plasticity_data.items():
+        npz[f"{pname}_plasticity_t_s"] = pd["t_s"]
+        npz[f"{pname}_u"] = pd["u"]
+        npz[f"{pname}_R"] = pd["R"]
 
     save_npz(npz, out_dir / "data" / "sim_outputs.npz")
 
