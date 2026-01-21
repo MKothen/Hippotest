@@ -315,3 +315,14 @@ simulation:
     max_raster_neurons_per_pop: 250
     rate_bin_ms: 5.0
     rate_smooth_ms: 20.0
+    activity_video:
+      enabled: false
+      fps: 24
+      window_ms: 20.0
+      max_neurons_per_pop: 2000
+      mesh_opacity: 0.08
+      mesh_downsample: 2
+      base_opacity: 0.15
+      active_point_size: 7.0
+      background_color: "white"
+      show_meshes: true
