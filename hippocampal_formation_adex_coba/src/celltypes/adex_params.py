@@ -38,4 +38,17 @@ PRESETS: Dict[str, AdExParams] = {
         C_pF=150.0, gL_nS=10.0, EL_mV=-68.0, VT_mV=-52.0, DeltaT_mV=1.5,
         a_nS=2.0, tau_w_ms=300.0, b_pA=60.0, Vr_mV=-58.0, Vcut_mV=-30.0, t_ref_ms=2.0
     ),
+    "DG_GC": AdExParams(
+        C_pF=100.0,       # Smaller capacitance (easier to charge)
+        gL_nS=10.0,       
+        EL_mV=-75.0, 
+        VT_mV=-58.0,      # LOWER THRESHOLD (easier to fire)
+        DeltaT_mV=2.0,
+        a_nS=2.0,         # Less adaptation
+        tau_w_ms=150.0, 
+        b_pA=10.0,        # Less adaptation spike-triggered
+        Vr_mV=-65.0, 
+        Vcut_mV=-30.0, 
+        t_ref_ms=2.0
+    ),
 }
