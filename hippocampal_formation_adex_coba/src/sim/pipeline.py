@@ -9,7 +9,12 @@ from ..data.ccf_atlas import CCFAtlas
 from ..celltypes.library import build_celltype_library, CellTypeSpec
 from ..anatomy.regions import load_region_geometry, RegionGeometry
 from ..anatomy.placement import layer_defs_from_config, LayerDef, sample_somata
-from ..anatomy.visualize import render_scene_from_geometries, PopulationViz
+from ..anatomy.visualize import (
+    render_scene_from_geometries,
+    render_activity_video_from_geometries,
+    ActivityVideoSettings,
+    PopulationViz,
+)
 from ..connectivity.pathways import load_pathways
 from ..connectivity.builder import PopulationGeometry, build_connectivity
 from ..connectivity.metrics import pathway_stats
@@ -171,3 +176,35 @@ def build_and_run(config: Dict[str, Any], out_dir: Path) -> None:
         print(
             f"  {pop_name:20s}  n={meta['n']:6d}  mean_rate={meta['mean_rate_hz']:.3f}  spikes={meta['n_spikes']}"
         )
+
+    # -----------------------
+    # Activity video
+    # -----------------------
+    sim_cfg = config.get("simulation", {}) or {}
+    viz_cfg = sim_cfg.get("viz", {}) or {}
+    activity_cfg = viz_cfg.get("activity_video", {}) or {}
+    if bool(activity_cfg.get("enabled", False)):
+        settings = ActivityVideoSettings(
+            fps=int(activity_cfg.get("fps", 30)),
+            window_ms=float(activity_cfg.get("window_ms", 20.0)),
+            max_neurons_per_pop=int(activity_cfg.get("max_neurons_per_pop", 2000)),
+            mesh_opacity=float(activity_cfg.get("mesh_opacity", 0.08)),
+            mesh_downsample=int(activity_cfg.get("mesh_downsample", 2)),
+            base_opacity=float(activity_cfg.get("base_opacity", 0.15)),
+            active_point_size=float(activity_cfg.get("active_point_size", 7.0)),
+            background_color=str(activity_cfg.get("background_color", "white")),
+            show_meshes=bool(activity_cfg.get("show_meshes", True)),
+        )
+        try:
+            render_activity_video_from_geometries(
+                region_geoms=region_geoms,
+                populations=viz_pops,
+                spikes=sim_out.spikes,
+                out_mp4=out_dir / "viz" / "activity_video.mp4",
+                settings=settings,
+                t_stop_s=float(sim_cfg.get("t_sim_s", 1.0)),
+                offscreen=True,
+            )
+            print(f"3D activity video exported: {out_dir/'viz'/'activity_video.mp4'}")
+        except Exception as e:
+            print(f"[warn] 3D activity video skipped ({e})")

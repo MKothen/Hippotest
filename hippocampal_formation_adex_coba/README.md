@@ -36,6 +36,7 @@ python scripts/build_and_run.py --config configs/small.yaml
 
 Outputs are written to `runs/<run_name>_<timestamp>/`:
 - `viz/scene.html` (interactive 3D region meshes + soma points)
+- `viz/activity_video.mp4` (optional 3D activity video; enable via `simulation.viz.activity_video`)
 - `plots/raster.png`, `plots/rates.png`
 - `connectivity_summary.json`
 - `summary.json`
