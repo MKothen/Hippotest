@@ -1,0 +1,862 @@
+pathways:
+  # =============================================================================
+  # EXCITATORY PATHWAYS - Trisynaptic Circuit & Direct Paths
+  # =============================================================================
+  
+  # -------------------------
+  # Perforant Path (EC → DG)
+  # -------------------------
+  - name: EC_L2_to_DG_GC_perforant
+    pre_pop: EC_L2_Exc
+    post_pop: DG_GC
+    kind: exc
+    k_out_mean: 60
+    k_out_std: 10
+    radius_mm: 2.5
+    sigma_mm: 1.0
+    velocity_m_per_s: 0.4
+    base_delay_ms: 2.0
+    target_layers: {OML: 0.55, MML: 0.30, IML: 0.15}
+    synapse: {w_ampa_nS: 4.0, w_nmda_nS: 4.0}
+
+  - name: EC_L2_to_DG_PV_feedforward
+    pre_pop: EC_L2_Exc
+    post_pop: DG_PV
+    kind: exc
+    k_out_mean: 3
+    k_out_std: 1
+    radius_mm: 1.8
+    sigma_mm: 0.8
+    velocity_m_per_s: 0.4
+    base_delay_ms: 2.0
+    target_layers: {GCL: 1.0}
+    synapse: {w_ampa_nS: 0.2, w_nmda_nS: 0.10}
+
+  - name: EC_L2_to_DG_SOM_feedforward
+    pre_pop: EC_L2_Exc
+    post_pop: DG_SOM
+    kind: exc
+    k_out_mean: 4
+    k_out_std: 2
+    radius_mm: 1.8
+    sigma_mm: 0.8
+    velocity_m_per_s: 0.4
+    base_delay_ms: 2.0
+    target_layers: {MML: 0.5, OML: 0.5}
+    synapse: {w_ampa_nS: 0.2, w_nmda_nS: 0.10}
+
+  # -------------------------
+  # Mossy Fiber (DG → CA3)
+  # -------------------------
+  - name: DG_to_CA3_mossy
+    pre_pop: DG_GC
+    post_pop: CA3_Pyr
+    kind: exc
+    k_out_mean: 14
+    k_out_std: 5
+    radius_mm: 2.5
+    sigma_mm: 1.1
+    velocity_m_per_s: 0.35
+    base_delay_ms: 3.0
+    target_layers: {SR: 0.50, SL: 0.35, SP: 0.15}
+    synapse: {w_ampa_nS: 1.8, w_nmda_nS: 0.25}
+
+  - name: DG_to_CA3_PV_feedforward
+    pre_pop: DG_GC
+    post_pop: CA3_PV
+    kind: exc
+    k_out_mean: 8
+    k_out_std: 3
+    radius_mm: 2.5
+    sigma_mm: 1.0
+    velocity_m_per_s: 0.35
+    base_delay_ms: 3.0
+    target_layers: {SP: 0.6, SR: 0.4}
+    synapse: {w_ampa_nS: 1.3, w_nmda_nS: 0.15}
+
+  - name: DG_to_CA3_SOM_feedforward
+    pre_pop: DG_GC
+    post_pop: CA3_SOM
+    kind: exc
+    k_out_mean: 6
+    k_out_std: 2
+    radius_mm: 2.5
+    sigma_mm: 1.0
+    velocity_m_per_s: 0.35
+    base_delay_ms: 3.0
+    target_layers: {SLM: 0.5, SR: 0.5}
+    synapse: {w_ampa_nS: 0.9, w_nmda_nS: 0.12}
+
+  # -------------------------
+  # CA3 Recurrent Collaterals
+  # -------------------------
+  - name: CA3_recurrent_associational
+    pre_pop: CA3_Pyr
+    post_pop: CA3_Pyr
+    kind: exc
+    k_out_mean: 32
+    k_out_std: 10
+    radius_mm: 1.2
+    sigma_mm: 0.5
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.5
+    target_layers: {SR: 0.75, SO: 0.25}
+    synapse: {w_ampa_nS: 0.42, w_nmda_nS: 0.18}
+    exclude_self: true
+
+  - name: CA3_to_CA3_PV
+    pre_pop: CA3_Pyr
+    post_pop: CA3_PV
+    kind: exc
+    k_out_mean: 18
+    k_out_std: 6
+    radius_mm: 1.5
+    sigma_mm: 0.6
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.5
+    target_layers: {SP: 0.7, SR: 0.3}
+    synapse: {w_ampa_nS: 0.65, w_nmda_nS: 0.12}
+
+  - name: CA3_to_CA3_SOM
+    pre_pop: CA3_Pyr
+    post_pop: CA3_SOM
+    kind: exc
+    k_out_mean: 15
+    k_out_std: 5
+    radius_mm: 1.6
+    sigma_mm: 0.7
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.5
+    target_layers: {SLM: 0.5, SR: 0.5}
+    synapse: {w_ampa_nS: 0.55, w_nmda_nS: 0.12}
+
+  # -------------------------
+  # Schaffer Collaterals (CA3 → CA1)
+  # -------------------------
+  - name: CA3_to_CA1_schaffer
+    pre_pop: CA3_Pyr
+    post_pop: CA1_Pyr
+    kind: exc
+    k_out_mean: 28
+    k_out_std: 8
+    radius_mm: 2.0
+    sigma_mm: 0.8
+    velocity_m_per_s: 0.35
+    base_delay_ms: 2.5
+    target_layers: {SR: 0.85, SO: 0.15}
+    synapse: {w_ampa_nS: 0.50, w_nmda_nS: 0.22}
+
+  - name: CA3_to_CA1_PV_feedforward
+    pre_pop: CA3_Pyr
+    post_pop: CA1_PV
+    kind: exc
+    k_out_mean: 12
+    k_out_std: 4
+    radius_mm: 2.0
+    sigma_mm: 0.9
+    velocity_m_per_s: 0.35
+    base_delay_ms: 2.5
+    target_layers: {SP: 0.6, SR: 0.4}
+    synapse: {w_ampa_nS: 0.75, w_nmda_nS: 0.12}
+
+  - name: CA3_to_CA1_SOM
+    pre_pop: CA3_Pyr
+    post_pop: CA1_SOM
+    kind: exc
+    k_out_mean: 10
+    k_out_std: 4
+    radius_mm: 2.0
+    sigma_mm: 0.9
+    velocity_m_per_s: 0.35
+    base_delay_ms: 2.5
+    target_layers: {SLM: 0.5, SR: 0.5}
+    synapse: {w_ampa_nS: 0.62, w_nmda_nS: 0.12}
+
+  # -------------------------
+  # Temporoammonic Path (EC L3 → CA1)
+  # -------------------------
+  - name: EC_L3_to_CA1_temporoammonic
+    pre_pop: EC_L3_Exc
+    post_pop: CA1_Pyr
+    kind: exc
+    k_out_mean: 16
+    k_out_std: 5
+    radius_mm: 2.5
+    sigma_mm: 1.0
+    velocity_m_per_s: 0.4
+    base_delay_ms: 3.0
+    target_layers: {SLM: 1.0}
+    synapse: {w_ampa_nS: 3.0, w_nmda_nS: 3.0}
+
+  - name: EC_L3_to_CA1_SOM
+    pre_pop: EC_L3_Exc
+    post_pop: CA1_SOM
+    kind: exc
+    k_out_mean: 4
+    k_out_std: 2
+    radius_mm: 2.5
+    sigma_mm: 1.0
+    velocity_m_per_s: 0.4
+    base_delay_ms: 3.0
+    target_layers: {SLM: 1.0}
+    synapse: {w_ampa_nS: 0.3, w_nmda_nS: 0.15}
+
+  # -------------------------
+  # Direct EC Inputs
+  # -------------------------
+  - name: EC_L2_to_CA3_direct
+    pre_pop: EC_L2_Exc
+    post_pop: CA3_Pyr
+    kind: exc
+    k_out_mean: 12
+    k_out_std: 4
+    radius_mm: 2.5
+    sigma_mm: 1.2
+    velocity_m_per_s: 0.4
+    base_delay_ms: 3.0
+    target_layers: {SLM: 1.0}
+    synapse: {w_ampa_nS: 0.32, w_nmda_nS: 0.18}
+
+  - name: EC_L2_to_CA2_direct
+    pre_pop: EC_L2_Exc
+    post_pop: CA2_Pyr
+    kind: exc
+    k_out_mean: 10
+    k_out_std: 3
+    radius_mm: 2.5
+    sigma_mm: 1.2
+    velocity_m_per_s: 0.4
+    base_delay_ms: 3.0
+    target_layers: {SLM: 1.0}
+    synapse: {w_ampa_nS: 0.40, w_nmda_nS: 0.18}
+
+  - name: EC_L3_to_CA1_PV
+    pre_pop: EC_L3_Exc
+    post_pop: CA1_PV
+    kind: exc
+    k_out_mean: 3
+    k_out_std: 1
+    radius_mm: 2.5
+    sigma_mm: 1.0
+    velocity_m_per_s: 0.4
+    base_delay_ms: 3.0
+    target_layers: {SLM: 1.0}
+    synapse: {w_ampa_nS: 2.0, w_nmda_nS: 0.10}
+
+  # -------------------------
+  # CA2 Projections
+  # -------------------------
+  - name: CA2_to_CA1
+    pre_pop: CA2_Pyr
+    post_pop: CA1_Pyr
+    kind: exc
+    k_out_mean: 18
+    k_out_std: 6
+    radius_mm: 1.8
+    sigma_mm: 0.7
+    velocity_m_per_s: 0.35
+    base_delay_ms: 2.0
+    target_layers: {SR: 0.8, SO: 0.2}
+    synapse: {w_ampa_nS: 0.48, w_nmda_nS: 0.20}
+
+  - name: CA2_to_CA1_PV
+    pre_pop: CA2_Pyr
+    post_pop: CA1_PV
+    kind: exc
+    k_out_mean: 8
+    k_out_std: 3
+    radius_mm: 1.8
+    sigma_mm: 0.7
+    velocity_m_per_s: 0.35
+    base_delay_ms: 2.0
+    target_layers: {SP: 1.0}
+    synapse: {w_ampa_nS: 0.72, w_nmda_nS: 0.12}
+
+  - name: CA3_to_CA2
+    pre_pop: CA3_Pyr
+    post_pop: CA2_Pyr
+    kind: exc
+    k_out_mean: 10
+    k_out_std: 4
+    radius_mm: 1.5
+    sigma_mm: 0.7
+    velocity_m_per_s: 0.35
+    base_delay_ms: 2.0
+    target_layers: {SR: 1.0}
+    synapse: {w_ampa_nS: 0.38, w_nmda_nS: 0.16}
+
+  # -------------------------
+  # CA1 → Subiculum
+  # -------------------------
+  - name: CA1_to_SUB
+    pre_pop: CA1_Pyr
+    post_pop: SUB_Pyr
+    kind: exc
+    k_out_mean: 20
+    k_out_std: 6
+    radius_mm: 2.0
+    sigma_mm: 0.9
+    velocity_m_per_s: 0.35
+    base_delay_ms: 2.5
+    target_layers: {PYR: 1.0}
+    synapse: {w_ampa_nS: 0.55, w_nmda_nS: 0.20}
+
+  - name: CA1_to_SUB_PV
+    pre_pop: CA1_Pyr
+    post_pop: SUB_PV
+    kind: exc
+    k_out_mean: 8
+    k_out_std: 3
+    radius_mm: 2.0
+    sigma_mm: 0.9
+    velocity_m_per_s: 0.35
+    base_delay_ms: 2.5
+    target_layers: {PYR: 1.0}
+    synapse: {w_ampa_nS: 0.68, w_nmda_nS: 0.12}
+
+  - name: CA1_to_SUB_SOM
+    pre_pop: CA1_Pyr
+    post_pop: SUB_SOM
+    kind: exc
+    k_out_mean: 6
+    k_out_std: 2
+    radius_mm: 2.0
+    sigma_mm: 0.9
+    velocity_m_per_s: 0.35
+    base_delay_ms: 2.5
+    target_layers: {MOLECULAR: 1.0}
+    synapse: {w_ampa_nS: 0.50, w_nmda_nS: 0.12}
+
+  # -------------------------
+  # CA1 Local Recurrent
+  # -------------------------
+  - name: CA1_recurrent
+    pre_pop: CA1_Pyr
+    post_pop: CA1_Pyr
+    kind: exc
+    k_out_mean: 8
+    k_out_std: 3
+    radius_mm: 0.8
+    sigma_mm: 0.4
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.5
+    target_layers: {SO: 1.0}
+    synapse: {w_ampa_nS: 0.28, w_nmda_nS: 0.15}
+    exclude_self: true
+
+  - name: CA1_to_CA1_PV
+    pre_pop: CA1_Pyr
+    post_pop: CA1_PV
+    kind: exc
+    k_out_mean: 15
+    k_out_std: 5
+    radius_mm: 1.2
+    sigma_mm: 0.6
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.5
+    target_layers: {SP: 0.7, SR: 0.3}
+    synapse: {w_ampa_nS: 0.58, w_nmda_nS: 0.12}
+
+  - name: CA1_to_CA1_SOM
+    pre_pop: CA1_Pyr
+    post_pop: CA1_SOM
+    kind: exc
+    k_out_mean: 12
+    k_out_std: 4
+    radius_mm: 1.4
+    sigma_mm: 0.7
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.5
+    target_layers: {SLM: 0.5, SR: 0.5}
+    synapse: {w_ampa_nS: 0.52, w_nmda_nS: 0.12}
+
+  # =============================================================================
+  # FEEDBACK PATHWAYS (Completing the Loop)
+  # =============================================================================
+  
+  # -------------------------
+  # CA1 → CA3 Backprojections
+  # -------------------------
+  - name: CA1_to_CA3_feedback
+    pre_pop: CA1_Pyr
+    post_pop: CA3_Pyr
+    kind: exc
+    k_out_mean: 6
+    k_out_std: 2
+    radius_mm: 1.5
+    sigma_mm: 0.7
+    velocity_m_per_s: 0.35
+    base_delay_ms: 2.5
+    target_layers: {SR: 0.6, SO: 0.4}
+    synapse: {w_ampa_nS: 0.32, w_nmda_nS: 0.15}
+
+  # -------------------------
+  # Subiculum → EC (Closing the Loop)
+  # -------------------------
+  - name: SUB_to_EC_feedback
+    pre_pop: SUB_Pyr
+    post_pop: EC_L3_Exc
+    kind: exc
+    k_out_mean: 15
+    k_out_std: 5
+    radius_mm: 2.5
+    sigma_mm: 1.1
+    velocity_m_per_s: 0.35
+    base_delay_ms: 3.0
+    target_layers: {L3: 1.0}
+    synapse: {w_ampa_nS: 0.45, w_nmda_nS: 0.18}
+
+  - name: CA1_to_EC_direct_feedback
+    pre_pop: CA1_Pyr
+    post_pop: EC_L2_Exc
+    kind: exc
+    k_out_mean: 8
+    k_out_std: 3
+    radius_mm: 2.5
+    sigma_mm: 1.2
+    velocity_m_per_s: 0.35
+    base_delay_ms: 3.5
+    target_layers: {L2: 1.0}
+    synapse: {w_ampa_nS: 0.35, w_nmda_nS: 0.15}
+
+  # =============================================================================
+  # INHIBITORY PATHWAYS
+  # =============================================================================
+  
+  # -------------------------
+  # Dentate Gyrus Inhibition
+  # -------------------------
+  - name: DG_PV_to_DG_GC
+    pre_pop: DG_PV
+    post_pop: DG_GC
+    kind: inh
+    k_out_mean: 35
+    k_out_std: 10
+    radius_mm: 1.0
+    sigma_mm: 0.5
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.0
+    target_layers: {GCL: 1.0}
+    synapse: {w_gabaa_nS: 1.5}
+
+  - name: DG_SOM_to_DG_GC
+    pre_pop: DG_SOM
+    post_pop: DG_GC
+    kind: inh
+    k_out_mean: 20
+    k_out_std: 6
+    radius_mm: 1.5
+    sigma_mm: 0.7
+    velocity_m_per_s: 0.25
+    base_delay_ms: 1.5
+    target_layers: {MML: 0.55, OML: 0.45}
+    synapse: {w_gabaa_nS: 1.8, w_gabab_nS: 0.5}
+
+  - name: DG_PV_to_DG_PV
+    pre_pop: DG_PV
+    post_pop: DG_PV
+    kind: inh
+    k_out_mean: 12
+    k_out_std: 4
+    radius_mm: 1.2
+    sigma_mm: 0.6
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.0
+    target_layers: {GCL: 1.0}
+    synapse: {w_gabaa_nS: 1.5}
+
+  - name: DG_SOM_to_DG_PV
+    pre_pop: DG_SOM
+    post_pop: DG_PV
+    kind: inh
+    k_out_mean: 8
+    k_out_std: 3
+    radius_mm: 1.3
+    sigma_mm: 0.6
+    velocity_m_per_s: 0.25
+    base_delay_ms: 1.5
+    target_layers: {GCL: 0.5, MML: 0.5}
+    synapse: {w_gabaa_nS: 1.2, w_gabab_nS: 0.4}
+
+  - name: DG_PV_to_DG_SOM
+    pre_pop: DG_PV
+    post_pop: DG_SOM
+    kind: inh
+    k_out_mean: 6
+    k_out_std: 2
+    radius_mm: 1.3
+    sigma_mm: 0.6
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.0
+    target_layers: {MML: 1.0}
+    synapse: {w_gabaa_nS: 1.0}
+
+  - name: DG_SOM_to_DG_SOM
+    pre_pop: DG_SOM
+    post_pop: DG_SOM
+    kind: inh
+    k_out_mean: 5
+    k_out_std: 2
+    radius_mm: 1.4
+    sigma_mm: 0.7
+    velocity_m_per_s: 0.25
+    base_delay_ms: 1.5
+    target_layers: {MML: 0.5, OML: 0.5}
+    synapse: {w_gabaa_nS: 0.8, w_gabab_nS: 0.3}
+
+  # -------------------------
+  # CA3 Inhibition
+  # -------------------------
+  - name: CA3_PV_to_CA3_Pyr
+    pre_pop: CA3_PV
+    post_pop: CA3_Pyr
+    kind: inh
+    k_out_mean: 58
+    k_out_std: 15
+    radius_mm: 1.0
+    sigma_mm: 0.5
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.0
+    target_layers: {SP: 1.0}
+    synapse: {w_gabaa_nS: 5.8}
+
+  - name: CA3_SOM_to_CA3_Pyr
+    pre_pop: CA3_SOM
+    post_pop: CA3_Pyr
+    kind: inh
+    k_out_mean: 32
+    k_out_std: 10
+    radius_mm: 1.5
+    sigma_mm: 0.7
+    velocity_m_per_s: 0.25
+    base_delay_ms: 1.5
+    target_layers: {SLM: 0.45, SR: 0.55}
+    synapse: {w_gabaa_nS: 2.9, w_gabab_nS: 0.85}
+
+  - name: CA3_PV_to_CA3_PV
+    pre_pop: CA3_PV
+    post_pop: CA3_PV
+    kind: inh
+    k_out_mean: 15
+    k_out_std: 5
+    radius_mm: 1.2
+    sigma_mm: 0.6
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.0
+    target_layers: {SP: 1.0}
+    synapse: {w_gabaa_nS: 1.8}
+
+  - name: CA3_SOM_to_CA3_PV
+    pre_pop: CA3_SOM
+    post_pop: CA3_PV
+    kind: inh
+    k_out_mean: 10
+    k_out_std: 4
+    radius_mm: 1.3
+    sigma_mm: 0.6
+    velocity_m_per_s: 0.25
+    base_delay_ms: 1.5
+    target_layers: {SR: 1.0}
+    synapse: {w_gabaa_nS: 1.4, w_gabab_nS: 0.5}
+
+  - name: CA3_PV_to_CA3_SOM
+    pre_pop: CA3_PV
+    post_pop: CA3_SOM
+    kind: inh
+    k_out_mean: 8
+    k_out_std: 3
+    radius_mm: 1.3
+    sigma_mm: 0.6
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.0
+    target_layers: {SR: 0.5, SLM: 0.5}
+    synapse: {w_gabaa_nS: 1.2}
+
+  - name: CA3_SOM_to_CA3_SOM
+    pre_pop: CA3_SOM
+    post_pop: CA3_SOM
+    kind: inh
+    k_out_mean: 6
+    k_out_std: 2
+    radius_mm: 1.4
+    sigma_mm: 0.7
+    velocity_m_per_s: 0.25
+    base_delay_ms: 1.5
+    target_layers: {SLM: 1.0}
+    synapse: {w_gabaa_nS: 0.9, w_gabab_nS: 0.3}
+
+  # -------------------------
+  # CA2 Inhibition
+  # -------------------------
+  - name: CA2_PV_to_CA2_Pyr
+    pre_pop: CA2_PV
+    post_pop: CA2_Pyr
+    kind: inh
+    k_out_mean: 45
+    k_out_std: 12
+    radius_mm: 1.0
+    sigma_mm: 0.5
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.0
+    target_layers: {SP: 1.0}
+    synapse: {w_gabaa_nS: 4.8}
+
+  - name: CA2_SOM_to_CA2_Pyr
+    pre_pop: CA2_SOM
+    post_pop: CA2_Pyr
+    kind: inh
+    k_out_mean: 25
+    k_out_std: 8
+    radius_mm: 1.5
+    sigma_mm: 0.7
+    velocity_m_per_s: 0.25
+    base_delay_ms: 1.5
+    target_layers: {SLM: 0.5, SR: 0.5}
+    synapse: {w_gabaa_nS: 2.5, w_gabab_nS: 0.75}
+
+  # -------------------------
+  # CA1 Inhibition
+  # -------------------------
+  - name: CA1_PV_to_CA1_Pyr
+    pre_pop: CA1_PV
+    post_pop: CA1_Pyr
+    kind: inh
+    k_out_mean: 52
+    k_out_std: 14
+    radius_mm: 1.0
+    sigma_mm: 0.5
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.0
+    target_layers: {SP: 1.0}
+    synapse: {w_gabaa_nS: 5.5}
+
+  - name: CA1_SOM_to_CA1_Pyr
+    pre_pop: CA1_SOM
+    post_pop: CA1_Pyr
+    kind: inh
+    k_out_mean: 30
+    k_out_std: 9
+    radius_mm: 1.6
+    sigma_mm: 0.7
+    velocity_m_per_s: 0.25
+    base_delay_ms: 1.5
+    target_layers: {SLM: 0.60, SR: 0.40}
+    synapse: {w_gabaa_nS: 2.6, w_gabab_nS: 0.85}
+
+  - name: CA1_PV_to_CA1_PV
+    pre_pop: CA1_PV
+    post_pop: CA1_PV
+    kind: inh
+    k_out_mean: 18
+    k_out_std: 6
+    radius_mm: 1.2
+    sigma_mm: 0.6
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.0
+    target_layers: {SP: 1.0}
+    synapse: {w_gabaa_nS: 2.2}
+
+  - name: CA1_SOM_to_CA1_PV
+    pre_pop: CA1_SOM
+    post_pop: CA1_PV
+    kind: inh
+    k_out_mean: 12
+    k_out_std: 4
+    radius_mm: 1.4
+    sigma_mm: 0.7
+    velocity_m_per_s: 0.25
+    base_delay_ms: 1.5
+    target_layers: {SR: 0.5, SLM: 0.5}
+    synapse: {w_gabaa_nS: 1.6, w_gabab_nS: 0.6}
+
+  - name: CA1_PV_to_CA1_SOM
+    pre_pop: CA1_PV
+    post_pop: CA1_SOM
+    kind: inh
+    k_out_mean: 10
+    k_out_std: 4
+    radius_mm: 1.4
+    sigma_mm: 0.7
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.0
+    target_layers: {SR: 0.5, SLM: 0.5}
+    synapse: {w_gabaa_nS: 1.4}
+
+  - name: CA1_SOM_to_CA1_SOM
+    pre_pop: CA1_SOM
+    post_pop: CA1_SOM
+    kind: inh
+    k_out_mean: 6
+    k_out_std: 2
+    radius_mm: 1.5
+    sigma_mm: 0.8
+    velocity_m_per_s: 0.25
+    base_delay_ms: 1.5
+    target_layers: {SLM: 1.0}
+    synapse: {w_gabaa_nS: 0.9, w_gabab_nS: 0.3}
+
+  # -------------------------
+  # Subiculum Inhibition
+  # -------------------------
+  - name: SUB_PV_to_SUB_Pyr
+    pre_pop: SUB_PV
+    post_pop: SUB_Pyr
+    kind: inh
+    k_out_mean: 42
+    k_out_std: 12
+    radius_mm: 1.2
+    sigma_mm: 0.6
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.0
+    target_layers: {PYR: 1.0}
+    synapse: {w_gabaa_nS: 4.5}
+
+  - name: SUB_SOM_to_SUB_Pyr
+    pre_pop: SUB_SOM
+    post_pop: SUB_Pyr
+    kind: inh
+    k_out_mean: 24
+    k_out_std: 7
+    radius_mm: 1.6
+    sigma_mm: 0.8
+    velocity_m_per_s: 0.25
+    base_delay_ms: 1.5
+    target_layers: {MOLECULAR: 1.0}
+    synapse: {w_gabaa_nS: 2.2, w_gabab_nS: 0.7}
+
+  - name: SUB_PV_to_SUB_PV
+    pre_pop: SUB_PV
+    post_pop: SUB_PV
+    kind: inh
+    k_out_mean: 10
+    k_out_std: 4
+    radius_mm: 1.2
+    sigma_mm: 0.6
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.0
+    target_layers: {PYR: 1.0}
+    synapse: {w_gabaa_nS: 1.5}
+
+  - name: SUB_SOM_to_SUB_SOM
+    pre_pop: SUB_SOM
+    post_pop: SUB_SOM
+    kind: inh
+    k_out_mean: 6
+    k_out_std: 2
+    radius_mm: 1.6
+    sigma_mm: 0.8
+    velocity_m_per_s: 0.25
+    base_delay_ms: 1.5
+    target_layers: {MOLECULAR: 1.0}
+    synapse: {w_gabaa_nS: 0.8, w_gabab_nS: 0.3}
+
+  # =============================================================================
+  # EC INTERNAL CIRCUITRY
+  # =============================================================================
+  
+  # -------------------------
+  # EC Local Inhibition
+  # -------------------------
+  - name: EC_PV_to_EC_L2_Exc
+    pre_pop: EC_PV
+    post_pop: EC_L2_Exc
+    kind: inh
+    k_out_mean: 25
+    k_out_std: 8
+    radius_mm: 1.0
+    sigma_mm: 0.5
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.0
+    target_layers: {L2: 1.0}
+    synapse: {w_gabaa_nS: 1.6}
+
+  - name: EC_SOM_to_EC_L2_Exc
+    pre_pop: EC_SOM
+    post_pop: EC_L2_Exc
+    kind: inh
+    k_out_mean: 15
+    k_out_std: 5
+    radius_mm: 1.2
+    sigma_mm: 0.6
+    velocity_m_per_s: 0.25
+    base_delay_ms: 1.5
+    target_layers: {L2: 1.0}
+    synapse: {w_gabaa_nS: 0.8, w_gabab_nS: 0.5}
+
+  - name: EC_PV_to_EC_L3_Exc
+    pre_pop: EC_PV
+    post_pop: EC_L3_Exc
+    kind: inh
+    k_out_mean: 25
+    k_out_std: 8
+    radius_mm: 1.0
+    sigma_mm: 0.5
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.0
+    target_layers: {L3: 1.0}
+    synapse: {w_gabaa_nS: 3.2}
+
+  - name: EC_SOM_to_EC_L3_Exc
+    pre_pop: EC_SOM
+    post_pop: EC_L3_Exc
+    kind: inh
+    k_out_mean: 15
+    k_out_std: 5
+    radius_mm: 1.2
+    sigma_mm: 0.6
+    velocity_m_per_s: 0.25
+    base_delay_ms: 1.5
+    target_layers: {L3: 1.0}
+    synapse: {w_gabaa_nS: 1.8, w_gabab_nS: 0.5}
+
+  - name: EC_L2_to_EC_PV
+    pre_pop: EC_L2_Exc
+    post_pop: EC_PV
+    kind: exc
+    k_out_mean: 12
+    k_out_std: 4
+    radius_mm: 1.2
+    sigma_mm: 0.6
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.5
+    target_layers: {L2: 1.0}
+    synapse: {w_ampa_nS: 0.65, w_nmda_nS: 0.12}
+
+  - name: EC_L3_to_EC_PV
+    pre_pop: EC_L3_Exc
+    post_pop: EC_PV
+    kind: exc
+    k_out_mean: 12
+    k_out_std: 4
+    radius_mm: 1.2
+    sigma_mm: 0.6
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.5
+    target_layers: {L3: 1.0}
+    synapse: {w_ampa_nS: 0.65, w_nmda_nS: 0.12}
+
+  - name: EC_L2_to_EC_SOM
+    pre_pop: EC_L2_Exc
+    post_pop: EC_SOM
+    kind: exc
+    k_out_mean: 10
+    k_out_std: 3
+    radius_mm: 1.3
+    sigma_mm: 0.7
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.5
+    target_layers: {L2: 1.0}
+    synapse: {w_ampa_nS: 0.55, w_nmda_nS: 0.12}
+
+  - name: EC_L3_to_EC_SOM
+    pre_pop: EC_L3_Exc
+    post_pop: EC_SOM
+    kind: exc
+    k_out_mean: 10
+    k_out_std: 3
+    radius_mm: 1.3
+    sigma_mm: 0.7
+    velocity_m_per_s: 0.3
+    base_delay_ms: 1.5
+    target_layers: {L3: 1.0}
+    synapse: {w_ampa_nS: 0.55, w_nmda_nS: 0.12}
