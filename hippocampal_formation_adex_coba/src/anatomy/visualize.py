@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -7,6 +6,12 @@ from typing import Dict, Iterable, Optional, Tuple
 
 import numpy as np
 import pyvista as pv
+
+# Allow plotting empty meshes (required for PyVista >= 0.43)
+try:
+    pv.global_theme.allow_empty_mesh = True
+except AttributeError:
+    pass
 
 from .regions import RegionGeometry
 
